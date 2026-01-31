@@ -1,7 +1,7 @@
 const users = [
   { username: "ccr", password: "ccr123", role: "CCR" },
   { username: "supervisor1", password: "sup123", role: "SUPERVISOR" },
-  { username: "tractorista1", password: "tra123", role: "TRACTORISTA" },
+  { username: "tractorista1", password: "trac123", role: "TRACTORISTA" },
   { username: "maletero1", password: "mal123", role: "MALETERO" },
   { username: "cintero1", password: "cin123", role: "CINTERO" },
 ];
@@ -9,7 +9,7 @@ const users = [
 document.querySelector("form").addEventListener("submit", (e) => {
   e.preventDefault();
 
-  const user = document.getElementById("user").value;
+  const user = document.getElementById("username").value;
   const pass = document.getElementById("password").value;
 
   const found = users.find(

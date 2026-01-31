@@ -1,21 +1,26 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-router = APIRouter(
-    prefix="/auth",
-    tags=["Auth"]
-)
+from app.security.auth import authenticate_user
+
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
 class LoginRequest(BaseModel):
     username: str
     password: str
 
-@router.post("/login")
-def login(data: LoginRequest):
-    if data.username == "ccr" and data.password == "ccr123":
-        return {
-            "access_token": "fake-token",
-            "role": "CCR"
-        }
+class LoginResponse(BaseModel):
+    access_token: str
+    role: str
 
-    raise HTTPException(status_code=401, detail="Credenciales inválidas")
+@router.post("/login", response_model=LoginResponse)
+def login(data: LoginRequest):
+    user = authenticate_user(data.username, data.password)
+
+    if not user:
+        raise HTTPException(status_code=401, detail="Credenciales inválidas")
+
+    return {
+        "access_token": "fake-jwt-token",
+        "role": user["role"]
+    }
