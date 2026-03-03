@@ -1,28 +1,159 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>CCR - Gestión de Rampa</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCR - Sistema de Gestión de Rampa</title>
+    <link rel="stylesheet" href="css/style-ccr.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="js/auth.js"></script> 
 </head>
 <body>
 
-  <h1>Panel CCR</h1>
-  <p>Bienvenido al sistema</p>
+    <header class="main-header">
+        <div class="header-left">
+            <h1>Sistema de Gestión de Rampa</h1>
+            <p>Coordinador CCR - Control de Guardia (Ciclo 4x2)</p>
+        </div>
+        <div class="header-right">
+            <span class="stat-badge"><strong id="count-vuelos">0</strong> vuelos pendientes</span>
+            <span class="stat-badge"><strong id="count-grupos">0</strong> grupos activos</span>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Salir
+            </button>
+        </div>
+    </header>
 
-  <button onclick="logout()">Cerrar sesión</button>
+    <nav class="main-nav">
+        <ul>
+            <li id="nav-vuelos" class="active"><i class="fa-solid fa-plane"></i> Vuelos y Grupos</li>
+            <li id="nav-personal-lista"><i class="fa-solid fa-users-viewfinder"></i> Personal por Rol</li>
+            <li id="nav-staff-registro"><i class="fa-solid fa-address-book"></i> Registro Staff</li>
+        </ul>
+    </nav>
 
-  <script>
-    const role = localStorage.getItem("role");
+    <main class="dashboard-container">
+        
+        <div id="view-vuelos" class="tab-view">
+            <div class="operation-layout">
+                <section class="vuelos-section">
+                    <div class="section-header">
+                        <h2>Vuelos Programados</h2>
+                        <button class="btn-primary-outline" onclick="asignacionAutomatica()">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Asignación Rápida
+                        </button>
+                    </div>
+                    <div class="vuelos-list" id="contenedor-vuelos">
+                        <p class="loading">Cargando cronograma...</p>
+                    </div>
+                </section>
 
-    if (role !== "CCR") {
-      window.location.href = "index.html";
-    }
+                <aside class="grupos-section">
+                    <div class="section-header">
+                        <h2>Grupos de Guardia</h2>
+                        <div class="header-actions">
+                            <button class="btn-primary-mini" onclick="crearNuevoGrupo()">
+                                <i class="fa-solid fa-plus"></i> Nuevo Grupo
+                            </button>
+                            <button class="btn-danger-mini" onclick="finalizarGuardia()">
+                                <i class="fa-solid fa-calendar-check"></i> Cerrar Guardia
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grupos-list" id="contenedor-grupos">
+                        <div class="empty-msg">
+                            <p>No hay grupos para esta guardia. Comienza creando uno.</p>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
 
-    function logout() {
-      localStorage.clear();
-      window.location.href = "index.html";
-    }
-  </script>
+        <div id="view-personal-lista" class="tab-view" style="display: none;">
+            <section class="card">
+                <div class="section-header">
+                    <h2><i class="fa-solid fa-id-card-clip"></i> Gestión de Habilitaciones</h2>
+                    <div class="table-filters">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="busqueda-personal-rol" placeholder="Buscar por nombre o legajo..." onkeyup="renderizarVistaPersonal()">
+                    </div>
+                </div>
+                
+                <div id="contenedor-roles" class="roles-grid">
+                    <p class="loading">Cargando personal...</p>
+                </div>
+            </section>
+        </div>
 
+        <div id="view-staff-registro" class="tab-view" style="display: none;">
+            <section class="card">
+                <h2><i class="fa-solid fa-user-plus"></i> Registro de Personal</h2>
+                <p class="card-subtitle">Carga aquí a todo el personal disponible. Podrás asignarlos a diferentes grupos al inicio de cada guardia.</p>
+                
+                <form id="form-personal" class="personal-form">
+                    <div class="form-row">
+                        <div class="input-field">
+                            <label>Legajo</label>
+                            <input type="text" id="legajo-emp" placeholder="Ej: 45022" required>
+                        </div>
+                        <div class="input-field">
+                            <label>Nombre Completo</label>
+                            <input type="text" id="nombre-emp" placeholder="Ej: Juan Pérez" required>
+                        </div>
+                        <div class="input-field">
+                            <label>Rol Operativo</label>
+                            <select id="rol-emp">
+                                <option value="SUP">Supervisor</option>
+                                <option value="TRA">Tractorista</option>
+                                <option value="MAL">Maletero</option>
+                                <option value="CIN">Cintero</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-assign">Agregar al Staff</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="card" style="margin-top: 20px;">
+                <div class="section-header">
+                    <h2>Base de Datos Staff</h2>
+                    <div class="table-filters">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="buscar-personal" placeholder="Filtrar staff..." onkeyup="renderizarTablaPersonal()">
+                    </div>
+                </div>
+                
+                <table class="staff-table">
+                    <thead>
+                        <tr>
+                            <th>Legajo</th>
+                            <th>Nombre</th>
+                            <th>Rol</th>
+                            <th>Habilitaciones (Vencimientos)</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-personal-body"></tbody>
+                </table>
+            </section>
+        </div>
+
+        <div id="modal-asignar" class="modal">
+            <div class="modal-content card">
+                <div class="section-header">
+                    <h2 id="modal-titulo-grupo">Armar Equipo</h2>
+                    <button class="btn-close" onclick="cerrarModal()">&times;</button>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="busqueda-asignar" placeholder="Buscar personal disponible..." onkeyup="renderizarListaPersonalSeleccionable()">
+                </div>
+                <div class="lista-seleccionable" id="lista-personal-disponible"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="js/api.js"></script> 
+    <script src="js/ccr.js"></script> 
 </body>
 </html>

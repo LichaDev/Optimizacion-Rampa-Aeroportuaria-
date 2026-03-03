@@ -1,0 +1,424 @@
+// --- 1. ESTADO DE LA APLICACIÓN (DATOS) ---
+let staffGeneral = JSON.parse(localStorage.getItem('staffGeneral')) || [];
+let vuelos = JSON.parse(localStorage.getItem('vuelos')) || [
+    { id: 'AR1234', origen: 'EZE', destino: 'MAD', hora: '08:00', estado: 'Pendiente', grupo: null },
+    { id: 'IB6842', origen: 'GRU', destino: 'EZE', hora: '09:30', estado: 'Pendiente', grupo: null }
+];
+let grupos = JSON.parse(localStorage.getItem('grupos')) || [];
+let grupoSeleccionadoId = null; 
+
+// --- 2. PERSISTENCIA ---
+function guardarCambios() {
+    localStorage.setItem('staffGeneral', JSON.stringify(staffGeneral));
+    localStorage.setItem('vuelos', JSON.stringify(vuelos));
+    localStorage.setItem('grupos', JSON.stringify(grupos));
+}
+
+// --- 3. LÓGICA DE DOCUMENTACIÓN AUTOMÁTICA ---
+function generarDocumentos(rol) {
+    const hoy = new Date();
+    const vence = new Date();
+    vence.setFullYear(hoy.getFullYear() + 1);
+    const fechaVencimiento = vence.toLocaleDateString('es-AR');
+
+    const docs = {
+        CMA: { nombre: "CMA Clase 4", vencimiento: fechaVencimiento, esPermanente: false },
+        MANEJO: { nombre: "Permiso Manejo", vencimiento: "PERMANENTE", esPermanente: true },
+        SENIAL: { nombre: "Señalización", vencimiento: "PERMANENTE", esPermanente: true },
+        SUP: { nombre: "Hab. Supervisor", vencimiento: fechaVencimiento, esPermanente: false }
+    };
+
+    if (rol === 'MAL') return [docs.CMA];
+    if (rol === 'CIN' || rol === 'TRA') return [docs.CMA, docs.MANEJO, docs.SENIAL];
+    if (rol === 'SUP') return [docs.CMA, docs.MANEJO, docs.SENIAL, docs.SUP];
+    return [];
+}
+
+// --- 4. GESTIÓN DE GUARDIA Y GRUPOS ---
+
+function crearNuevoGrupo() {
+    const nombre = prompt("Nombre del nuevo grupo (ej: Grupo 1, Rampa Nocturna):");
+    if (!nombre || nombre.trim() === "") return;
+
+    const nuevoGrupo = {
+        id: Date.now(),
+        nombre: nombre,
+        estado: 'Disponible',
+        descanso: 0,
+        integrantes: []
+    };
+
+    grupos.push(nuevoGrupo);
+    guardarCambios();
+    actualizarInterfaz();
+}
+
+function finalizarGuardia() {
+    const confirmacion = confirm("¿Cerrar guardia de 4 días? Se eliminarán todos los grupos para el nuevo relevo. El Staff General permanecerá intacto.");
+    if (confirmacion) {
+        grupos = []; 
+        vuelos.forEach(v => {
+            v.estado = 'Pendiente';
+            v.grupo = null;
+        });
+        guardarCambios();
+        actualizarInterfaz();
+        alert("Guardia finalizada. Sistema listo para la nueva configuración.");
+    }
+}
+
+function eliminarGrupoCompleto(id) {
+    if(confirm("¿Eliminar este grupo permanentemente?")) {
+        grupos = grupos.filter(g => g.id !== id);
+        guardarCambios();
+        actualizarInterfaz();
+    }
+}
+
+// --- 5. RENDERIZADO DE INTERFAZ OPERATIVA ---
+
+function renderizarVuelos() {
+    const contenedor = document.getElementById('contenedor-vuelos');
+    if (!contenedor) return;
+    contenedor.innerHTML = vuelos.map(v => `
+        <article class="card flight-card ${v.estado === 'Asignado' ? 'assigned' : ''}">
+            <div class="flight-info">
+                <div class="flight-header">
+                    <span class="flight-id">${v.id}</span>
+                    <span class="badge ${v.estado === 'Asignado' ? 'badge-assigned' : 'badge-pending'}">${v.estado}</span>
+                </div>
+                <div class="flight-details">
+                    <p><strong>${v.origen}</strong> <i class="fa-solid fa-arrow-right"></i> <strong>${v.destino}</strong></p>
+                    <p class="time"><i class="fa-regular fa-clock"></i> ${v.hora}</p>
+                </div>
+                ${v.grupo ? `<div class="assigned-group-info"><span class="badge badge-assigned">${v.grupo} trabajando</span></div>` : ''}
+            </div>
+            <div class="flight-actions">
+                ${v.estado === 'Pendiente' ? `<button class="btn-assign" onclick="asignarGrupo('${v.id}')">Asignar</button>` : ''}
+            </div>
+        </article>
+    `).join('');
+}
+
+function renderizarGrupos() {
+    const contenedor = document.getElementById('contenedor-grupos');
+    if (!contenedor) return;
+
+    if (grupos.length === 0) {
+        contenedor.innerHTML = '<div class="empty-msg"><p>No hay grupos creados para esta guardia.</p></div>';
+        return;
+    }
+
+    contenedor.innerHTML = grupos.sort((a,b) => b.descanso - a.descanso).map(g => {
+        const counts = {
+            SUP: g.integrantes.filter(i => i.rol === 'SUP').length,
+            CIN: g.integrantes.filter(i => i.rol === 'CIN').length,
+            MAL: g.integrantes.filter(i => i.rol === 'MAL').length
+        };
+        const estaCompleto = counts.SUP >= 1 && counts.CIN >= 1 && counts.MAL >= 2;
+
+        return `
+        <details class="card group-card ${g.estado === 'Ocupado' ? 'busy' : ''}">
+            <summary>
+                <div class="group-summary-content">
+                    <div>
+                        <strong>${g.nombre}</strong>
+                        ${estaCompleto ? '<i class="fa-solid fa-circle-check" style="color:#2a9d8f; margin-left:5px;" title="Equipo Mínimo OK"></i>' : ''}
+                    </div>
+                    <div class="group-actions-header">
+                        <span class="badge ${g.estado === 'Disponible' ? 'badge-available' : 'badge-busy'}">${g.estado}</span>
+                        <button class="btn-add-mini" onclick="abrirModalAsignar(${g.id}, event)">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </button>
+                        <button class="btn-delete-mini" onclick="eliminarGrupoCompleto(${g.id})">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </summary>
+            <div class="group-expanded-detail">
+                <table class="staff-table-mini">
+                    ${g.integrantes.length > 0 ? 
+                        g.integrantes.map((i, index) => `
+                        <tr>
+                            <td><strong>${i.rol}</strong></td>
+                            <td>${i.nombre}</td>
+                            <td><button class="btn-remove" onclick="quitarDelGrupo(${g.id}, ${index})">&times;</button></td>
+                        </tr>`).join('') : 
+                        '<tr><td colspan="3" style="color:gray; font-size:0.8rem; padding:10px;">Sin personal asignado.</td></tr>'}
+                </table>
+            </div>
+        </details>
+    `}).join('');
+}
+
+// --- 6. GESTIÓN DE PERSONAL POR ROL (NUEVA VISTA) ---
+
+function renderizarVistaPersonal() {
+    const contenedor = document.getElementById('contenedor-roles');
+    if (!contenedor) return;
+
+    const busqueda = document.getElementById('busqueda-personal-rol').value.toLowerCase();
+    
+    const rolesConfig = [
+        { id: 'SUP', titulo: 'Supervisores', icono: 'fa-user-tie' },
+        { id: 'TRA', titulo: 'Tractoristas', icono: 'fa-truck-ramp-box' },
+        { id: 'CIN', titulo: 'Cinteros', icono: 'fa-tape' },
+        { id: 'MAL', titulo: 'Maleteros', icono: 'fa-suitcase' }
+    ];
+
+    contenedor.innerHTML = rolesConfig.map(rol => {
+        const personalFiltrado = staffGeneral.filter(p => 
+            p.rol === rol.id && 
+            (p.nombre.toLowerCase().includes(busqueda) || p.legajo.includes(busqueda))
+        );
+
+        return `
+            <div class="rol-column">
+                <div class="rol-header">
+                    <i class="fa-solid ${rol.icono}"></i>
+                    <h3>${rol.titulo} (${personalFiltrado.length})</h3>
+                </div>
+                <div class="rol-cards-container">
+                    ${personalFiltrado.map(p => `
+                        <div class="person-card">
+                            <div class="person-main-info">
+                                <strong>${p.nombre}</strong>
+                                <span>#${p.legajo}</span>
+                            </div>
+                            <div class="person-docs">
+                                ${p.documentos.map((d, i) => `
+                                    <div class="doc-item" onclick="editarDocumento('${p.legajo}', ${i})">
+                                        <small>${d.nombre}</small>
+                                        <span class="${d.esPermanente ? 'perm' : 'vence'}">${d.vencimiento}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                    ${personalFiltrado.length === 0 ? '<p class="empty-col">No hay personal</p>' : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function editarDocumento(legajo, docIndex) {
+    const empleado = staffGeneral.find(p => p.legajo === legajo);
+    if (!empleado) return;
+
+    const doc = empleado.documentos[docIndex];
+    const nuevoVencimiento = prompt(`Editar vencimiento para ${doc.nombre} (${empleado.nombre}):`, doc.vencimiento);
+
+    if (nuevoVencimiento !== null && nuevoVencimiento.trim() !== "") {
+        empleado.documentos[docIndex].vencimiento = nuevoVencimiento;
+        guardarCambios();
+        renderizarVistaPersonal();
+    }
+}
+
+// --- 7. REGISTRO STAFF GENERAL ---
+
+function renderizarTablaPersonal() {
+    const tbody = document.getElementById('tabla-personal-body');
+    if (!tbody) return;
+    
+    const busqueda = document.getElementById('buscar-personal').value.toLowerCase();
+    const staffFiltrado = staffGeneral.filter(p => 
+        p.nombre.toLowerCase().includes(busqueda) || p.legajo.includes(busqueda)
+    );
+
+    tbody.innerHTML = staffFiltrado.map((p, index) => `
+        <tr>
+            <td><strong>#${p.legajo}</strong></td>
+            <td>${p.nombre}</td>
+            <td><span class="badge-rol">${p.rol}</span></td>
+            <td>
+                <div class="docs-list">
+                    ${p.documentos.map(d => `
+                        <span class="doc-tag ${d.esPermanente ? 'perm' : 'vence'}">
+                            ${d.nombre}: <strong>${d.vencimiento}</strong>
+                        </span>
+                    `).join('')}
+                </div>
+            </td>
+            <td>
+                <button onclick="eliminarPersonal('${p.legajo}')" class="btn-delete">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// --- 8. LÓGICA DE ASIGNACIÓN (MODAL) ---
+
+function abrirModalAsignar(id, event) {
+    if(event) event.stopPropagation(); 
+    grupoSeleccionadoId = id;
+    const modal = document.getElementById('modal-asignar');
+    modal.style.display = 'flex';
+    renderizarListaPersonalSeleccionable();
+}
+
+function cerrarModal() {
+    document.getElementById('modal-asignar').style.display = 'none';
+}
+
+function renderizarListaPersonalSeleccionable() {
+    const contenedor = document.getElementById('lista-personal-disponible');
+    if (!contenedor) return;
+
+    const busqueda = document.getElementById('busqueda-asignar').value.toLowerCase();
+    const nombresRoles = { 'SUP': 'Supervisores', 'TRA': 'Tractoristas', 'MAL': 'Maleteros', 'CIN': 'Cinteros' };
+
+    let htmlFinal = '';
+    Object.keys(nombresRoles).forEach(rolKey => {
+        const personalDeEsteRol = staffGeneral.filter(p => 
+            p.rol === rolKey && (p.nombre.toLowerCase().includes(busqueda) || p.legajo.includes(busqueda))
+        );
+        
+        if (personalDeEsteRol.length > 0) {
+            htmlFinal += `<h3 class="role-divider">${nombresRoles[rolKey]}</h3>`;
+            personalDeEsteRol.forEach(p => {
+                const yaAsignado = grupos.some(g => g.integrantes.some(i => i.legajo === p.legajo));
+                htmlFinal += `
+                    <div class="item-seleccionable ${yaAsignado ? 'disabled' : ''}" 
+                         onclick="${yaAsignado ? '' : `confirmarAsignacionALista('${p.legajo}')`}">
+                        <div>
+                            <strong>${p.nombre}</strong><br>
+                            <small>#${p.legajo}</small>
+                        </div>
+                        ${yaAsignado ? '<span>Ocupado</span>' : '<i class="fa-solid fa-plus"></i>'}
+                    </div>
+                `;
+            });
+        }
+    });
+    contenedor.innerHTML = htmlFinal || '<p style="padding:20px; text-align:center;">No hay personal disponible.</p>';
+}
+
+function confirmarAsignacionALista(legajo) {
+    const empleado = staffGeneral.find(p => p.legajo === legajo);
+    const grupo = grupos.find(g => g.id === grupoSeleccionadoId);
+    if (empleado && grupo) {
+        grupo.integrantes.push({...empleado});
+        guardarCambios();
+        renderizarGrupos();
+        renderizarListaPersonalSeleccionable(); 
+    }
+}
+
+function quitarDelGrupo(grupoId, indexIntegrante) {
+    const grupo = grupos.find(g => g.id === grupoId);
+    if (grupo) {
+        grupo.integrantes.splice(indexIntegrante, 1);
+        guardarCambios();
+        renderizarGrupos();
+    }
+}
+
+function asignarGrupo(vueloId) {
+    const gruposAptos = grupos.filter(g => {
+        if (g.estado !== 'Disponible') return false;
+        const c = {
+            SUP: g.integrantes.filter(i => i.rol === 'SUP').length,
+            CIN: g.integrantes.filter(i => i.rol === 'CIN').length,
+            MAL: g.integrantes.filter(i => i.rol === 'MAL').length
+        };
+        return c.SUP >= 1 && c.CIN >= 1 && c.MAL >= 2;
+    });
+
+    const grupoElegido = gruposAptos.sort((a,b) => b.descanso - a.descanso)[0];
+
+    if (!grupoElegido) {
+        alert("⚠️ No se puede asignar el vuelo. Equipo mínimo requerido: 1 SUP, 1 CIN, 2 MAL.");
+        return;
+    }
+
+    const vuelo = vuelos.find(v => v.id === vueloId);
+    vuelo.estado = 'Asignado';
+    vuelo.grupo = grupoElegido.nombre;
+    grupoElegido.estado = 'Ocupado';
+    guardarCambios();
+    actualizarInterfaz();
+}
+
+// --- 9. NAVEGACIÓN Y EVENTOS ---
+
+function ocultarTodasLasVistas() {
+    document.querySelectorAll('.tab-view').forEach(v => v.style.display = 'none');
+    document.querySelectorAll('.main-nav li').forEach(li => li.classList.remove('active'));
+}
+
+document.getElementById('nav-vuelos').addEventListener('click', () => {
+    ocultarTodasLasVistas();
+    document.getElementById('view-vuelos').style.display = 'block';
+    document.getElementById('nav-vuelos').classList.add('active');
+    actualizarInterfaz();
+});
+
+document.getElementById('nav-personal-lista').addEventListener('click', () => {
+    ocultarTodasLasVistas();
+    document.getElementById('view-personal-lista').style.display = 'block';
+    document.getElementById('nav-personal-lista').classList.add('active');
+    renderizarVistaPersonal();
+});
+
+document.getElementById('nav-staff-registro').addEventListener('click', () => {
+    ocultarTodasLasVistas();
+    document.getElementById('view-staff-registro').style.display = 'block';
+    document.getElementById('nav-staff-registro').classList.add('active');
+    renderizarTablaPersonal();
+});
+
+document.getElementById('form-personal').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const legajo = document.getElementById('legajo-emp').value;
+    if(staffGeneral.some(p => p.legajo === legajo)) return alert("El legajo ya existe.");
+    
+    const nuevoTrabajador = {
+        legajo,
+        nombre: document.getElementById('nombre-emp').value,
+        rol: document.getElementById('rol-emp').value,
+        documentos: generarDocumentos(document.getElementById('rol-emp').value)
+    };
+
+    staffGeneral.push(nuevoTrabajador);
+    guardarCambios();
+    renderizarTablaPersonal();
+    e.target.reset();
+});
+
+function eliminarPersonal(legajo) {
+    if(confirm("¿Eliminar este trabajador del staff general?")) {
+        staffGeneral = staffGeneral.filter(p => p.legajo !== legajo);
+        guardarCambios();
+        renderizarTablaPersonal();
+    }
+}
+
+function actualizarInterfaz() {
+    renderizarVuelos();
+    renderizarGrupos();
+    if(document.getElementById('count-vuelos')) 
+        document.getElementById('count-vuelos').innerText = vuelos.filter(v => v.estado === 'Pendiente').length;
+    if(document.getElementById('count-grupos'))
+        document.getElementById('count-grupos').innerText = grupos.filter(g => g.estado === 'Disponible').length;
+}
+
+document.addEventListener('DOMContentLoaded', actualizarInterfaz);
+
+// --- 10. CIERRE DE SESIÓN ---
+function logout() {
+    // 1. Opcional: Confirmar antes de salir para evitar clics accidentales
+    if (confirm("¿Estás seguro de que deseas cerrar sesión?")) {
+        
+        // 2. Limpiamos el rol del localStorage para que nadie entre sin loguearse
+        localStorage.removeItem("role");
+        
+        // 3. Redirigimos al index (o login.html, como se llame tu archivo principal)
+        // Si tu login está en la raíz y se llama index.html:
+        window.location.href = "index.html"; 
+    }
+}

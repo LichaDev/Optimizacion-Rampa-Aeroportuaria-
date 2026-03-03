@@ -1,0 +1,860 @@
+:root {
+    --primary-blue: #0052cc;
+    --bg-light: #f4f7f9;
+    --text-main: #1a1a1a;
+    --text-muted: #626f86;
+    --green-available: #22a06b; /* Verde de tus capturas */
+    --blue-pending: #0052cc;
+    --orange-warning: #c97c10;
+    --border-color: #dcdfe4;
+    --white: #ffffff;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-main);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* --- HEADER --- */
+.main-header {
+    background: var(--white);
+    padding: 1rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.header-left h1 { font-size: 1.4rem; margin: 0; font-weight: 700; }
+.header-left p { margin: 0; font-size: 0.9rem; color: var(--text-muted); }
+
+.header-right { display: flex; align-items: center; gap: 10px; }
+
+.stat-badge {
+    background: #f1f2f4;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    border: 1px solid var(--border-color);
+}
+
+.logout-btn {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+.logout-btn:hover { background: #f1f2f4; }
+
+/* --- NAVEGACIÓN --- */
+.main-nav {
+    display: flex;
+    justify-content: center;
+    background: var(--white);
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.main-nav ul { list-style: none; display: flex; gap: 8px; margin: 0; padding: 0; }
+
+.main-nav li {
+    padding: 0.6rem 1.8rem;
+    border-radius: 20px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.main-nav li.active {
+    background: #ffffff;
+    color: var(--text-main);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border: 1px solid var(--border-color);
+}
+
+/* --- DASHBOARD LAYOUT --- */
+.dashboard-container {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 2.5rem;
+    padding: 2rem 3rem;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.section-header h2 { font-size: 1.2rem; color: var(--text-main); }
+
+/* --- CARDS --- */
+.card {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+/* Flight Cards */
+.flight-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.flight-header { display: flex; align-items: center; gap: 12px; margin-bottom: 0.8rem; }
+.flight-id { font-weight: 700; font-size: 1.2rem; }
+
+.flight-details p { margin: 4px 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+.time { color: var(--text-muted); font-weight: 500; }
+
+.assigned-group-info { margin-top: 12px; }
+
+/* --- BADGES (Basados en tus capturas) --- */
+.badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.badge-pending { background: #e9f2ff; color: #0052cc; } /* Azul */
+.badge-assigned { background: #e3fcef; color: #1f845a; } /* Verde suave */
+.badge-available { background: #22a06b; color: #ffffff; } /* Verde sólido */
+
+/* --- BOTONES --- */
+.btn-assign {
+    background: #172b4d; /* Negro azulado de tus capturas */
+    color: #ffffff;
+    border: none;
+    padding: 0.8rem 1.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-detail {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    padding: 0.8rem 1.2rem;
+    border-radius: 6px;
+    margin-left: 8px;
+    cursor: pointer;
+}
+
+.btn-primary-outline {
+    background: white;
+    border: 1.5px solid var(--primary-blue);
+    color: var(--primary-blue);
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* --- GRUPOS --- */
+.group-card { cursor: pointer; }
+.group-summary-content { display: flex; justify-content: space-between; align-items: center; width: 100%; padding-right: 20px; }
+.group-name { font-weight: 600; }
+.rest-time { color: var(--text-muted); font-size: 0.85rem; }
+
+/* Efecto para el grupo con más descanso */
+.longest-rest {
+    border-left: 6px solid var(--green-available);
+}
+
+.group-expanded-detail table {
+    width: 100%;
+    margin-top: 15px;
+    border-top: 1px solid #f1f2f4;
+    padding-top: 10px;
+    font-size: 0.9rem;
+}
+
+.group-expanded-detail td { padding: 6px 0; }
+
+
+.operation-layout {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 2.5rem;
+}
+
+.staff-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.staff-table th, .staff-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+
+.form-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.form-group input, .form-group select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.btn-delete {
+    background: none;
+    border: none;
+    color: #ff4d4d;
+    cursor: pointer;
+}
+
+/* --- VISTAS (Tabs) --- */
+.tab-view {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- FORMULARIO DE REGISTRO --- */
+.card-subtitle {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: flex-end;
+}
+
+.input-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 150px;
+}
+
+.input-field label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.input-field input, 
+.input-field select {
+    padding: 0.7rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background-color: #fafbfc;
+}
+
+.input-field input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    background-color: #fff;
+}
+
+/* --- TABLA DE STAFF --- */
+.staff-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.staff-table th {
+    background-color: #f8f9fa;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 15px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.staff-table td {
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.badge-rol {
+    background: #42526e;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* --- DOCUMENTOS (ETIQUETAS) --- */
+.docs-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.doc-tag {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Estilo para documentos que vencen (CMA, Hab. Sup) */
+.doc-tag.vence {
+    background-color: #fff7e6;
+    color: #c97c10;
+    border-color: #ffe58f;
+}
+
+/* Estilo para documentos permanentes (Manejo, Señalización) */
+.doc-tag.perm {
+    background-color: #e6f7ff;
+    color: #0052cc;
+    border-color: #91d5ff;
+}
+
+/* --- BUSCADOR --- */
+.table-filters input {
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    width: 250px;
+    font-size: 0.9rem;
+}
+
+/* --- RESPONSIVE PARA EL PERSONAL --- */
+@media (max-width: 1000px) {
+    .form-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .dashboard-container {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+}
+
+/* --- ESTILOS DEL MODAL DE ASIGNACIÓN --- */
+.modal {
+    display: none; /* Oculto por defecto */
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro translúcido */
+    backdrop-filter: blur(4px); /* Efecto de desenfoque al fondo */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 450px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+/* --- LISTA DE SELECCIÓN DENTRO DEL MODAL --- */
+.lista-seleccionable {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.item-seleccionable {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.item-seleccionable:hover {
+    background-color: #f0f7ff;
+    border-color: var(--primary-blue);
+    transform: translateX(5px);
+}
+
+.item-seleccionable.disabled {
+    opacity: 0.5;
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+    border-color: #eee;
+}
+
+.item-seleccionable.disabled span {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--green-available);
+}
+
+/* --- BOTONES MINI (Dentro de los Grupos) --- */
+.btn-add-mini {
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.btn-add-mini:hover {
+    transform: scale(1.1);
+    background: #0043a8;
+}
+
+.btn-delete-mini {
+    background: #fff0f0;
+    color: #ff4d4d;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-delete-mini:hover {
+    background: #ff4d4d;
+    color: white;
+}
+
+/* --- TABLA MINI DENTRO DEL DETAILS --- */
+.staff-table-mini {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 0.85rem;
+}
+
+.staff-table-mini td {
+    padding: 8px 5px;
+    border-bottom: 1px solid #f1f2f4;
+}
+
+.btn-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+/* --- GESTIÓN DE GUARDIA Y BOTONES --- */
+.header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-primary-mini {
+    background-color: var(--primary-blue);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary-mini:hover {
+    background-color: #0043a8;
+}
+
+.btn-danger-mini {
+    background-color: #fff0f0;
+    color: #e63946;
+    border: 1px solid #ffccd5;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-danger-mini:hover {
+    background-color: #e63946;
+    color: white;
+}
+
+/* --- GRUPOS DINÁMICOS --- */
+.group-actions-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto; /* Empuja los iconos a la derecha */
+}
+
+.empty-msg {
+    padding: 30px;
+    text-align: center;
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    color: #6b7280;
+    background-color: #f9fafb;
+}
+
+/* --- MODAL DE ASIGNACIÓN --- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    width: 90%;
+    max-width: 450px;
+    max-height: 85vh;
+    border-radius: 15px;
+    padding: 20px;
+    position: relative;
+    overflow-y: auto;
+}
+
+.search-box {
+    margin: 15px 0;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+}
+
+.lista-seleccionable {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.item-seleccionable {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid #edf2f7;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+}
+
+.item-seleccionable:hover {
+    background-color: #f0f7ff;
+    transform: scale(1.02);
+}
+
+.item-seleccionable.disabled {
+    opacity: 0.5;
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.item-seleccionable.disabled span {
+    color: #ffa500;
+    font-weight: bold;
+    font-size: 0.75rem;
+}
+
+/* --- TABLA DENTRO DEL GRUPO --- */
+.btn-remove {
+    background: none;
+    border: none;
+    color: #ff4d4d;
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.staff-table-mini {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.staff-table-mini td {
+    padding: 8px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 0.85rem;
+}
+
+/* --- SEPARADORES DE ROLES EN EL MODAL --- */
+.role-divider {
+    background-color: #f8fafc;
+    color: #475569;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 8px 12px;
+    margin: 15px 0 8px 0;
+    border-left: 4px solid var(--primary-blue);
+    border-radius: 0 4px 4px 0;
+    display: block;
+    width: 100%;
+}
+
+/* --- INDICADOR DE EQUIPO MÍNIMO OK --- */
+.fa-circle-check {
+    font-size: 0.9rem;
+    vertical-align: middle;
+    animation: fadeInCheck 0.5s ease-in-out;
+}
+
+@keyframes fadeInCheck {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* --- AJUSTES DE BOTONES DENTRO DEL ACORDEÓN (DETAILS) --- */
+.group-summary-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding-right: 10px;
+}
+
+.group-actions-header {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* --- ESTILO PARA PERSONAL DESHABILITADO EN EL MODAL --- */
+.item-seleccionable.disabled {
+    background-color: #f1f5f9;
+    border-color: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    pointer-events: none; /* Evita clics accidentales */
+}
+
+.item-seleccionable.disabled span {
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: #f59e0b; /* Color naranja para indicar 'Ocupado' */
+    background: #fef3c7;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+/* ================================================================
+   DISEÑO CCR: 70% ANCHO, CENTRADO Y PROLIJO
+   ================================================================ */
+
+/* 1. Ajuste del contenedor principal solo para la vista de Personal */
+#view-personal-lista {
+    width: 100%;
+    display: flex;
+    justify-content: center; /* Centra el contenido al 70% */
+    padding: 20px 0;
+}
+
+/* 2. El tablero de roles ocupará el 75% del ancho de la pantalla (el 70% que pediste + un margen de respiro) */
+#view-personal-lista .roles-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important; /* 4 columnas prolijas */
+    gap: 20px !important; /* Espacio elegante entre columnas */
+    width: 75vw !important; /* Ocupa el 75% del ancho de ventana */
+    max-width: 1400px; /* Evita que en monitores ultra-wide se deforme */
+    height: calc(100vh - 220px) !important; /* Altura fija para scroll interno */
+    margin: 0 auto;
+}
+
+/* 3. Estilización de las "Calles" (Columnas de Roles) */
+.rol-column {
+    background: #f1f5f9; /* Gris muy suave de fondo */
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Corta bordes para el radio de la cabecera */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.rol-header {
+    background: #ffffff !important;
+    padding: 12px 15px !important;
+    border-bottom: 2px solid var(--primary-blue);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rol-header h3 {
+    font-size: 0.8rem !important;
+    letter-spacing: 0.05em;
+    color: #475569;
+}
+
+/* 4. Scroll interno prolijo */
+.rol-cards-container {
+    padding: 12px !important;
+    overflow-y: auto !important;
+    flex: 1;
+}
+
+/* 5. TARJETA ULTRA-PROLIJA (Información en una sola fila para ahorrar altura) */
+.person-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 12px !important;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.person-card:hover {
+    border-color: var(--primary-blue);
+    box-shadow: 0 4px 12px rgba(0, 51, 153, 0.08);
+}
+
+/* Documentos: Ahora más visuales y menos altos */
+.person-docs {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 5px !important;
+    padding-top: 6px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.doc-item {
+    background: #f8fafc;
+    border: 1px solid #edf2f7;
+    padding: 2px 8px !important;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.doc-item small {
+    font-size: 0.6rem;
+    color: #64748b;
+    font-weight: 700;
+}
+
+.doc-item .date-value {
+    font-size: 0.65rem;
+    font-weight: 700;
+}
+
+/* Colores de estado */
+.vence { color: #dc2626; }
+.perm { color: #16a34a; }
+
+/* ================================================================
+   CORRECCIÓN ESTRATÉGICA: CENTRADO GLOBAL Y ANCHO PROPORCIONAL
+   ================================================================ */
+
+/* 1. Ajuste del contenedor raíz para todas las vistas */
+.dashboard-container {
+    display: block !important;    /* Cambiamos de grid a block para controlar el centrado manualmente */
+    width: 85% !important;        /* Un poco más ancho como pediste */
+    max-width: 1500px !important; /* Límite para que no se deforme en pantallas gigantes */
+    margin: 2rem auto !important; /* El 'auto' a los lados es lo que garantiza el centrado perfecto */
+    padding: 0 !important;
+}
+
+/* 2. Re-ajuste de la vista de VUELOS (para que recupere sus dos columnas internas) */
+.operation-layout {
+    display: grid !important;
+    grid-template-columns: 1.6fr 1fr !important; /* Mantiene tu diseño original de vuelos */
+    gap: 2rem;
+    width: 100%;
+}
+
+/* 3. Re-ajuste de la vista de PERSONAL (para que use sus 4 columnas) */
+#view-personal-lista .roles-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 15px !important;
+    width: 100% !important;
+    height: calc(100vh - 220px) !important;
+}
+
+/* 4. Limpieza de las columnas de Roles para que sean prolijas */
+.rol-column {
+    background: #f1f5f9;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Evita que las columnas desborden */
+}
+
+/* 5. Estilo de las tarjetas (Asegurando altura mínima y prolijidad) */
+.person-card {
+    background: white;
+    margin-bottom: 10px;
+    padding: 10px !important;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
