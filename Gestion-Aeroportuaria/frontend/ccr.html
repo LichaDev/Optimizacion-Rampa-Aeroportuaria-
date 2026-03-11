@@ -87,31 +87,15 @@
 
         <div id="view-staff-registro" class="tab-view" style="display: none;">
             <section class="card">
-                <h2><i class="fa-solid fa-user-plus"></i> Registro de Personal</h2>
-                <p class="card-subtitle">Carga aquí a todo el personal disponible. Podrás asignarlos a diferentes grupos al inicio de cada guardia.</p>
-                
-                <form id="form-personal" class="personal-form">
-                    <div class="form-row">
-                        <div class="input-field">
-                            <label>Legajo</label>
-                            <input type="text" id="legajo-emp" placeholder="Ej: 45022" required>
-                        </div>
-                        <div class="input-field">
-                            <label>Nombre Completo</label>
-                            <input type="text" id="nombre-emp" placeholder="Ej: Juan Pérez" required>
-                        </div>
-                        <div class="input-field">
-                            <label>Rol Operativo</label>
-                            <select id="rol-emp">
-                                <option value="SUP">Supervisor</option>
-                                <option value="TRA">Tractorista</option>
-                                <option value="MAL">Maletero</option>
-                                <option value="CIN">Cintero</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn-assign">Agregar al Staff</button>
+                <div class="section-header">
+                    <div>
+                        <h2><i class="fa-solid fa-address-book"></i> Gestión de Staff</h2>
+                        <p class="card-subtitle">Administre el personal habilitado y sus credenciales de acceso.</p>
                     </div>
-                </form>
+                    <button class="btn-add-personal" onclick="abrirModalEmpleado()">
+                        <i class="fa-solid fa-user-plus"></i> Añadir Personal
+                    </button>
+                </div>
             </section>
 
             <section class="card" style="margin-top: 20px;">
@@ -129,13 +113,72 @@
                             <th>Legajo</th>
                             <th>Nombre</th>
                             <th>Rol</th>
-                            <th>Habilitaciones (Vencimientos)</th>
+                            <th>Credenciales</th> <th>Habilitaciones (Vencimientos)</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-personal-body"></tbody>
                 </table>
             </section>
+        </div>
+
+        <div id="modal-nuevo-empleado" class="modal-overlay" style="display: none;">
+            <div class="modal-content-modern">
+                <div class="modal-header-emp">
+                    <h2><i class="fa-solid fa-user-plus"></i> Crear Nuevo Empleado</h2>
+                    <button class="btn-close-x" onclick="cerrarModalEmpleado()">&times;</button>
+                </div>
+                
+                <div class="modal-body-emp">
+                    <p class="modal-subtitle">Complete la información del nuevo empleado. Podrá cargar los documentos después de crearlo.</p>
+                    
+                    <form id="form-nuevo-empleado">
+                        <div class="modal-form-grid">
+                            <div class="input-field">
+                                <label>Nombre Completo *</label>
+                                <input type="text" id="emp-nombre" required placeholder="Juan Pérez">
+                            </div>
+                            <div class="input-field">
+                                <label>Legajo *</label>
+                                <input type="text" id="emp-legajo" required placeholder="EMP001">
+                            </div>
+
+                            <div class="input-field full-width">
+                                <label>Rol / Posición *</label>
+                                <select id="emp-rol" required onchange="actualizarListaDocsPreview()">
+                                    <option value="SUP">Supervisor</option>
+                                    <option value="TRA">Tractorista</option>
+                                    <option value="MAL">Maletero</option>
+                                    <option value="CIN">Cintero</option>
+                                </select>
+                            </div>
+
+                            <div class="input-field">
+                                <label>Usuario de Acceso *</label>
+                                <input type="text" id="emp-usuario" required placeholder="jperez">
+                            </div>
+                            <div class="input-field">
+                                <label>Contraseña *</label>
+                                <input type="text" id="emp-password" required placeholder="••••••">
+                            </div>
+                        </div>
+
+                        <div class="docs-preview-box">
+                            <p>Documentos requeridos para este rol:</p>
+                            <ul id="lista-docs-preview">
+                                </ul>
+                            <span class="docs-note">Estos documentos deberán ser cargados después de crear el empleado</span>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn-cancel" onclick="cerrarModalEmpleado()">Cancelar</button>
+                            <button type="submit" class="btn-create">
+                                <i class="fa-solid fa-user-plus"></i> Crear Empleado
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
 
         <div id="modal-asignar" class="modal">

@@ -194,6 +194,14 @@ function renderizarVistaPersonal() {
                                     </div>
                                 `).join('')}
                             </div>
+                            
+                            <div class="person-creds-toggle" onclick="toggleCredenciales('${p.legajo}')">
+                                <i class="fa-solid fa-key"></i> Ver acceso <i id="icon-creds-${p.legajo}" class="fa-solid fa-chevron-down"></i>
+                            </div>
+                            <div id="creds-${p.legajo}" class="creds-dropdown" style="display:none;">
+                                <p>Usuario: <strong>${p.usuario || 'No asignado'}</strong></p>
+                                <p>Pass: <strong>${p.pass || 'No asignado'}</strong></p>
+                            </div>
                         </div>
                     `).join('')}
                     ${personalFiltrado.length === 0 ? '<p class="empty-col">No hay personal</p>' : ''}
@@ -201,6 +209,19 @@ function renderizarVistaPersonal() {
             </div>
         `;
     }).join('');
+}
+
+// FUNCIÓN AL FINAL PARA QUE EL TOGGLE FUNCIONE:
+function toggleCredenciales(legajo) {
+    const caja = document.getElementById(`creds-${legajo}`);
+    const icono = document.getElementById(`icon-creds-${legajo}`);
+    if (caja.style.display === 'none') {
+        caja.style.display = 'block';
+        if(icono) icono.classList.replace('fa-chevron-down', 'fa-chevron-up');
+    } else {
+        caja.style.display = 'none';
+        if(icono) icono.classList.replace('fa-chevron-up', 'fa-chevron-down');
+    }
 }
 
 function editarDocumento(legajo, docIndex) {
@@ -228,22 +249,28 @@ function renderizarTablaPersonal() {
         p.nombre.toLowerCase().includes(busqueda) || p.legajo.includes(busqueda)
     );
 
-    tbody.innerHTML = staffFiltrado.map((p, index) => `
+    tbody.innerHTML = staffFiltrado.map((p) => `
         <tr>
             <td><strong>#${p.legajo}</strong></td>
             <td>${p.nombre}</td>
             <td><span class="badge-rol">${p.rol}</span></td>
             <td>
+                <div class="creds-info">
+                    <small>User: <strong>${p.usuario || '---'}</strong></small><br>
+                    <small>Pass: <strong>${p.pass || '---'}</strong></small>
+                </div>
+            </td>
+            <td>
                 <div class="docs-list">
                     ${p.documentos.map(d => `
                         <span class="doc-tag ${d.esPermanente ? 'perm' : 'vence'}">
-                            ${d.nombre}: <strong>${d.vencimiento}</strong>
+                            ${d.nombre}
                         </span>
                     `).join('')}
                 </div>
             </td>
             <td>
-                <button onclick="eliminarPersonal('${p.legajo}')" class="btn-delete">
+                <button onclick="eliminarPersonal('${p.legajo}')" class="btn-delete" title="Eliminar">
                     <i class="fa-solid fa-trash"></i>
                 </button>
             </td>
@@ -372,27 +399,84 @@ document.getElementById('nav-staff-registro').addEventListener('click', () => {
     renderizarTablaPersonal();
 });
 
-document.getElementById('form-personal').addEventListener('submit', (e) => {
+// Manejador del formulario del MODAL (reemplaza al anterior)
+document.getElementById('form-nuevo-empleado').addEventListener('submit', (e) => {
     e.preventDefault();
-    const legajo = document.getElementById('legajo-emp').value;
-    if(staffGeneral.some(p => p.legajo === legajo)) return alert("El legajo ya existe.");
     
+    const legajo = document.getElementById('emp-legajo').value;
+    const usuario = document.getElementById('emp-usuario').value;
+
+    // Validación de duplicados
+    if(staffGeneral.some(p => p.legajo === legajo)) {
+        return alert("Error: El legajo ya existe.");
+    }
+    
+    // Creamos el objeto con los nuevos campos de acceso
     const nuevoTrabajador = {
-        legajo,
-        nombre: document.getElementById('nombre-emp').value,
-        rol: document.getElementById('rol-emp').value,
-        documentos: generarDocumentos(document.getElementById('rol-emp').value)
+        legajo: legajo,
+        nombre: document.getElementById('emp-nombre').value,
+        rol: document.getElementById('emp-rol').value,
+        usuario: usuario,
+        pass: document.getElementById('emp-password').value,
+        documentos: generarDocumentos(document.getElementById('emp-rol').value) // Tu función actual
     };
 
+    // Guardar en el staff operativo
     staffGeneral.push(nuevoTrabajador);
+    
+    // IMPORTANTE: Guardar credenciales para que auth.js las reconozca
+    let usuariosAuth = JSON.parse(localStorage.getItem('usuarios_sistema')) || [];
+    usuariosAuth.push({
+        username: nuevoTrabajador.usuario,
+        password: nuevoTrabajador.pass,
+        role: nuevoTrabajador.rol
+    });
+    localStorage.setItem('usuarios_sistema', JSON.stringify(usuariosAuth));
+
     guardarCambios();
-    renderizarTablaPersonal();
-    e.target.reset();
+    renderizarTablaPersonal(); // Refresca la tabla de staff
+    cerrarModalEmpleado();     // Cierra y limpia el modal
+    alert(`Empleado ${nuevoTrabajador.nombre} registrado correctamente.`);
 });
 
+// Controladores de visibilidad del modal
+function abrirModalEmpleado() {
+    document.getElementById('modal-nuevo-empleado').style.display = 'flex';
+    actualizarListaDocsPreview(); // Para que muestre los docs según el rol inicial
+}
+
+function cerrarModalEmpleado() {
+    document.getElementById('modal-nuevo-empleado').style.display = 'none';
+    document.getElementById('form-nuevo-empleado').reset();
+}
+
+// Muestra qué documentos se generarán automáticamente
+function actualizarListaDocsPreview() {
+    const rol = document.getElementById('emp-rol').value;
+    const lista = document.getElementById('lista-docs-preview');
+    
+    // Llamamos a tu lógica de la Sección 3
+    const docsPrevia = generarDocumentos(rol);
+    lista.innerHTML = docsPrevia.map(d => `
+        <li><i class="fa-solid fa-check-double"></i> ${d.nombre}</li>
+    `).join('');
+}
+
 function eliminarPersonal(legajo) {
-    if(confirm("¿Eliminar este trabajador del staff general?")) {
+    if(confirm("¿Eliminar este trabajador del staff general y revocar su acceso?")) {
+        // Buscar el usuario antes de filtrar para borrar su credencial
+        const empleado = staffGeneral.find(p => p.legajo === legajo);
+        
+        if (empleado) {
+            // 1. Borrar de usuarios_sistema
+            let usuariosAuth = JSON.parse(localStorage.getItem('usuarios_sistema')) || [];
+            usuariosAuth = usuariosAuth.filter(u => u.username !== empleado.usuario);
+            localStorage.setItem('usuarios_sistema', JSON.stringify(usuariosAuth));
+        }
+
+        // 2. Borrar del staff general
         staffGeneral = staffGeneral.filter(p => p.legajo !== legajo);
+        
         guardarCambios();
         renderizarTablaPersonal();
     }
@@ -422,3 +506,25 @@ function logout() {
         window.location.href = "index.html"; 
     }
 }
+
+// 1. Seleccionamos los elementos
+const modal = document.querySelector('.modal-overlay');
+const btnAbrir = document.querySelector('.btn-add-personal');
+const btnCerrar = document.querySelector('.btn-close-x'); // O el botón que tengas
+
+// 2. Función para abrir
+btnAbrir.addEventListener('click', () => {
+    modal.classList.add('active');
+});
+
+// 3. Función para cerrar
+btnCerrar.addEventListener('click', () => {
+    modal.classList.remove('active');
+});
+
+// 4. Opcional: Cerrar si hacen clic fuera del recuadro blanco
+modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+        modal.classList.remove('active');
+    }
+});
