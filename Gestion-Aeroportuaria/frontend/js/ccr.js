@@ -37,8 +37,22 @@ function generarDocumentos(rol) {
 // --- 4. GESTIÓN DE GUARDIA Y GRUPOS ---
 
 function crearNuevoGrupo() {
-    const nombre = prompt("Nombre del nuevo grupo (ej: Grupo 1, Rampa Nocturna):");
-    if (!nombre || nombre.trim() === "") return;
+    // abrir el modal
+    document.getElementById('modal-crear-grupo').classList.add('active');
+}
+
+function cerrarModalGrupo() {
+    document.getElementById('modal-crear-grupo').classList.remove('active');
+    document.getElementById('input-nombre-grupo').value = ''; // Limpiar
+}
+
+function confirmarCreacionGrupo() {
+    const nombre = document.getElementById('input-nombre-grupo').value;
+    
+    if (!nombre || nombre.trim() === "") {
+        alert("Por favor, ingresa un nombre válido.");
+        return;
+    }
 
     const nuevoGrupo = {
         id: Date.now(),
@@ -51,6 +65,7 @@ function crearNuevoGrupo() {
     grupos.push(nuevoGrupo);
     guardarCambios();
     actualizarInterfaz();
+    cerrarModalGrupo(); // Cerrar el modal tras guardar
 }
 
 function finalizarGuardia() {
@@ -328,14 +343,28 @@ function renderizarListaPersonalSeleccionable() {
 function confirmarAsignacionALista(legajo) {
     const empleado = staffGeneral.find(p => p.legajo === legajo);
     const grupo = grupos.find(g => g.id === grupoSeleccionadoId);
-    if (empleado && grupo) {
-        grupo.integrantes.push({...empleado});
-        guardarCambios();
-        renderizarGrupos();
-        renderizarListaPersonalSeleccionable(); 
-    }
-}
+    
+    if (!empleado || !grupo) return;
 
+    // 1. Definimos los cupos máximos permitidos
+    const cuposMaximos = { 'SUP': 1, 'CIN': 1, 'MAL': 2 };
+
+    // 2. Contamos cuántos hay actualmente de ese rol en el grupo
+    const conteoActual = grupo.integrantes.filter(i => i.rol === empleado.rol).length;
+
+    // 3. Validación: Si ya alcanzó el límite, mostramos TU MODAL ESTILIZADO
+    if (conteoActual >= cuposMaximos[empleado.rol]) {
+        // AQUÍ ESTÁ EL CAMBIO: Usamos tu función en lugar de alert()
+        mostrarAlerta(`⚠️ No se puede agregar: El rol ${empleado.rol} ya alcanzó el cupo máximo permitido para este grupo.`);
+        return;
+    }
+
+    // 4. Si pasa la validación, lo agregamos
+    grupo.integrantes.push({...empleado});
+    guardarCambios();
+    renderizarGrupos();
+    renderizarListaPersonalSeleccionable(); 
+}
 function quitarDelGrupo(grupoId, indexIntegrante) {
     const grupo = grupos.find(g => g.id === grupoId);
     if (grupo) {
@@ -411,14 +440,14 @@ document.getElementById('form-nuevo-empleado').addEventListener('submit', (e) =>
         return alert("Error: El legajo ya existe.");
     }
     
-    // Creamos el objeto con los nuevos campos de acceso
+    // Crear el objeto con los nuevos campos de acceso
     const nuevoTrabajador = {
         legajo: legajo,
         nombre: document.getElementById('emp-nombre').value,
         rol: document.getElementById('emp-rol').value,
         usuario: usuario,
         pass: document.getElementById('emp-password').value,
-        documentos: generarDocumentos(document.getElementById('emp-rol').value) // Tu función actual
+        documentos: generarDocumentos(document.getElementById('emp-rol').value) 
     };
 
     // Guardar en el staff operativo
@@ -455,7 +484,7 @@ function actualizarListaDocsPreview() {
     const rol = document.getElementById('emp-rol').value;
     const lista = document.getElementById('lista-docs-preview');
     
-    // Llamamos a tu lógica de la Sección 3
+    // Llamamos a lógica de la Sección 3
     const docsPrevia = generarDocumentos(rol);
     lista.innerHTML = docsPrevia.map(d => `
         <li><i class="fa-solid fa-check-double"></i> ${d.nombre}</li>
@@ -498,11 +527,11 @@ function logout() {
     // 1. Opcional: Confirmar antes de salir para evitar clics accidentales
     if (confirm("¿Estás seguro de que deseas cerrar sesión?")) {
         
-        // 2. Limpiamos el rol del localStorage para que nadie entre sin loguearse
+        // 2. Limpiar el rol del localStorage para que nadie entre sin loguearse
         localStorage.removeItem("role");
         
-        // 3. Redirigimos al index (o login.html, como se llame tu archivo principal)
-        // Si tu login está en la raíz y se llama index.html:
+        // 3. Redirigir al index (o login.html, como se llame tu archivo principal)
+        // Si login está en la raíz y se llama index.html:
         window.location.href = "index.html"; 
     }
 }
@@ -528,3 +557,15 @@ modal.addEventListener('click', (e) => {
         modal.classList.remove('active');
     }
 });
+
+function mostrarAlerta(mensaje) {
+    const modal = document.getElementById('modal-alerta');
+    const texto = document.getElementById('mensaje-error');
+    
+    texto.innerText = mensaje; // Ponemos el mensaje personalizado
+    modal.classList.add('active'); // Mostramos el modal
+}
+
+function cerrarModalAlerta() {
+    document.getElementById('modal-alerta').classList.remove('active');
+}

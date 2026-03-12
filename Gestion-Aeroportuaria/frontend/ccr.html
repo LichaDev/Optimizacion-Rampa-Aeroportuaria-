@@ -26,7 +26,7 @@
 
     <nav class="main-nav">
         <ul>
-            <li id="nav-vuelos" class="active"><i class="fa-solid fa-plane"></i> Vuelos y Grupos</li>
+            <li id="nav-vuelos" class="active"><i class="fa-solid fa-plane"></i> Plataforma</li>
             <li id="nav-personal-lista"><i class="fa-solid fa-users-viewfinder"></i> Personal por Rol</li>
             <li id="nav-staff-registro"><i class="fa-solid fa-address-book"></i> Registro Staff</li>
         </ul>
@@ -191,6 +191,40 @@
                     <input type="text" id="busqueda-asignar" placeholder="Buscar personal disponible..." onkeyup="renderizarListaPersonalSeleccionable()">
                 </div>
                 <div class="lista-seleccionable" id="lista-personal-disponible"></div>
+            </div>
+        </div>
+
+        <!--Cartel de nuevo grupo-->
+        <div id="modal-crear-grupo" class="modal-overlay">
+            <div class="modal-content-modern">
+                <div class="modal-header-emp">
+                    <h2>Crear Nuevo Grupo</h2>
+                </div>
+                <div class="modal-body-emp">
+                    <div class="input-field">
+                        <label>Nombre del grupo</label>
+                        <input type="text" id="input-nombre-grupo" placeholder="Ej: Rampa Nocturna">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-cancel" onclick="cerrarModalGrupo()">Cancelar</button>
+                    <button class="btn-create" onclick="confirmarCreacionGrupo()">Crear Grupo</button>
+                </div>
+            </div>
+        </div>
+
+        <!--Cartel de alerta-->
+        <div id="modal-alerta" class="modal-overlay">
+            <div class="modal-content-modern" style="max-width: 350px;">
+                <div class="modal-header-emp" style="border-bottom: none; padding-bottom: 0;">
+                    <h2 style="color: #e63946;"><i class="fa-solid fa-triangle-exclamation"></i> Error de Asignación</h2>
+                </div>
+                <div class="modal-body-emp">
+                    <p id="mensaje-error" style="color: #475569; font-size: 0.95rem;"></p>
+                </div>
+                <div class="modal-footer" style="background: none; border-top: none; justify-content: center;">
+                    <button class="btn-create" onclick="cerrarModalAlerta()" style="background: #475569;">Entendido</button>
+                </div>
             </div>
         </div>
 
