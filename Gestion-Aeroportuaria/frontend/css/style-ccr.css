@@ -107,8 +107,8 @@ body {
     padding: 1.5rem;
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
-
-/* Flight Cards */
+/*
+/* Flight Cards
 .flight-card {
     display: flex;
     justify-content: space-between;
@@ -119,11 +119,14 @@ body {
 .flight-id { font-weight: 700; font-size: 1.2rem; }
 
 .flight-details p { margin: 4px 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
-.time { color: var(--text-muted); font-weight: 500; }
+.time { color: var(--text-muted); font-weight: 500; };
+*/
+
+
 
 .assigned-group-info { margin-top: 12px; }
 
-/* --- BADGES (Basados en tus capturas) --- */
+/* --- BADGES --- */
 .badge {
     padding: 4px 10px;
     border-radius: 6px;
@@ -154,7 +157,7 @@ body {
     margin-left: 8px;
     cursor: pointer;
 }
-
+/*
 .btn-primary-outline {
     background: white;
     border: 1.5px solid var(--primary-blue);
@@ -165,12 +168,12 @@ body {
     font-weight: 600;
 }
 
-/* --- GRUPOS --- */
+/* --- GRUPOS --- *
 .group-card { cursor: pointer; }
 .group-summary-content { display: flex; justify-content: space-between; align-items: center; width: 100%; padding-right: 20px; }
 .group-name { font-weight: 600; }
 .rest-time { color: var(--text-muted); font-size: 0.85rem; }
-
+*/
 /* Efecto para el grupo con más descanso */
 .longest-rest {
     border-left: 6px solid var(--green-available);
@@ -1041,7 +1044,7 @@ body {
 /* --- MODAL ESTRUCTURA MODERNA --- */
 /* El contenedor principal debe estar oculto por defecto */
 .modal-overlay {
-    display: none; /* <--- CAMBIA ESTO: De flex a none */
+    display: none; 
     position: fixed;
     z-index: 9999;
     left: 0;
@@ -1054,7 +1057,6 @@ body {
     align-items: center;
 }
 
-/* Esta clase es la que usaremos para mostrarlo */
 .modal-overlay.active {
     display: flex !important;
 }
@@ -1129,3 +1131,367 @@ body {
     cursor: pointer;
     color: var(--text-muted);
 }
+
+/* Contenedor principal del modal de Logout */
+.logout-box {
+    max-width: 400px;
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease-out;
+}
+
+.modal-header-logout {
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    padding: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.icon-wrapper-logout {
+    background: rgba(255, 255, 255, 0.2);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.8rem;
+}
+
+.modal-body-logout {
+    padding: 25px;
+    text-align: center;
+}
+
+.modal-body-logout h2 {
+    color: #1e293b;
+    margin-bottom: 10px;
+}
+
+.modal-body-logout p {
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.modal-footer-logout {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    background: #f8fafc;
+}
+
+/* Botones */
+.btn-cancel-logout {
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: #64748b;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel-logout:hover {
+    background: #f1f5f9;
+}
+
+.btn-confirm-logout {
+    padding: 12px;
+    border: none;
+    background: #ef4444;
+    color: white;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-confirm-logout:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Animación de entrada */
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/*FIN DE Contenedor principal del modal de Logout */
+
+
+/* --- MEJORA DE FLIGHT CARDS --- */
+/*================VUELOS=================*/
+.vuelos-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.flight-card {
+    display: flex; /* Esto es lo que activa el acomodo automático */
+    align-items: center; /* Alinea todo al centro verticalmente */
+    justify-content: space-between; /* Empuja el botón al final y el tiempo al inicio */
+    background: #fff;
+    padding: 1.2rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #3b82f6;
+    margin-bottom: 1rem;
+}
+
+.flight-info-main {
+    flex-grow: 1; /* Hace que este bloque ocupe el centro y empuje al botón */
+    margin-left: 15px;
+}
+
+.flight-actions {
+    flex-shrink: 0; /* Evita que el botón se encoja si el nombre del vuelo es muy largo */
+}
+
+.flight-info-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.flight-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Para que la ruta y la hora no se peguen */
+.flight-details {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.flight-details p {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* Colores de estado según el borde izquierdo */
+.flight-card.pendiente { border-left-color: var(--blue-pending); }
+.flight-card.asignado { border-left-color: var(--green-available); }
+.flight-card.demorado { border-left-color: #f59e0b; }
+
+.flight-card:hover {
+    transform: scale(1.01);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* El horario como protagonista */
+.flight-time-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-right: 1px solid #f1f2f4;
+    margin-right: 15px;
+}
+
+.flight-time-box .time {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.flight-time-box .label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.flight-info-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.flight-id {
+    font-size: 1.1rem;
+    color: var(--primary-blue);
+    font-weight: 700;
+}
+
+.flight-route {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+/* --- fin MEJORA DE FLIGHT CARDS --- */
+/*================VUELOS=================*/
+
+
+
+
+/* ---MEJORA DE GRUPOS DE GUARDIA--- */
+/*================GUARDIAS=================*/
+/* --- MEJORA PROFESIONAL GRUPOS --- */
+/* Contenedor del summary (el que hace click) */
+.group-summary-content {
+    display: flex;
+    align-items: center; /* Alineación vertical central */
+    padding: 12px 15px;
+    cursor: pointer;
+    list-style: none; /* Elimina flecha nativa */
+    gap: 10px; /* Espacio entre la flecha y el nombre */
+}
+
+/* Ocultar flecha nativa */
+.group-summary-content::-webkit-details-marker { display: none; }
+
+/* Contenedor que agrupa Flecha y Nombre */
+.group-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Separación entre la flecha y el texto "GRUPO X" */
+    flex-grow: 1; /* Ocupa todo el espacio disponible */
+}
+
+/* Flecha: Siempre visible y lista para rotar */
+.group-arrow {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+/* Rotación al abrir */
+.group-card[open] .group-arrow {
+    transform: rotate(180deg);
+}
+
+.group-name {
+    font-weight: 700;
+    color: #334155;
+    white-space: nowrap;
+}
+
+/* Contenedor derecho: Mantiene los botones a la derecha */
+.group-actions-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.staff-table-mini {
+    width: 100%;
+    table-layout: fixed; /* Esto es lo más importante: fuerza anchos fijos */
+    border-collapse: collapse;
+}
+
+.staff-table-mini td {
+    padding: 8px;
+    word-wrap: break-word; /* Evita que textos largos rompan la tabla */
+}
+
+/* Fuerza a la columna del botón a ser pequeña y siempre igual */
+.staff-table-mini td:nth-child(3) {
+    width: 40px; 
+    text-align: center;
+}
+/* ---fin MEJORA DE GRUPOS DE GUARDIA--- */
+/*================GUARDIAS=================*/
+
+
+
+
+/*boton asignacion rapida*/
+.btn-primary-outline {
+    background: #eff6ff;
+    border: 2px solid var(--primary-blue);
+    color: var(--primary-blue);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    transition: all 0.3s;
+}
+
+.btn-primary-outline:hover {
+    background: var(--primary-blue);
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 82, 204, 0.2);
+}
+/*fin de boton de asignacion rapida*/
+
+#mensaje-error {
+    width: 100% ;
+    display: block ;
+    text-align: center ;
+    padding: 10px 0 ; /* Añade un poco de aire */
+    min-height: 20px; /* Esto evita que el div desaparezca si está vacío */
+}
+
+.btn-entendido {
+    background-color: #e63946;
+    color: white;
+    border: none;
+    padding: 10px 30px; /* Menos ancho horizontal */
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease; /* Transición suave */
+    display: inline-block; /* Permite que el ancho sea según el texto */
+    min-width: 120px; /* Ancho mínimo para que no se vea pequeño */
+}
+
+/* El efecto al pasar el mouse */
+.btn-entendido:hover {
+    background-color: #d62839; 
+    transform: translateY(-2px); /* Un pequeño salto hacia arriba */
+    box-shadow: 0 4px 8px rgba(230, 57, 70, 0.3); /* Sombra */
+}
+
+.success-icon {
+    color: #2a9d8f;
+    font-size: 4rem;
+    margin: 20px 0;
+    display: block;
+    text-align: center;
+    animation: popIn 0.3s ease-out;
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/*============================*/
+/*Retoque de modal confirmacion de eliminacion de personal del registro*/
+/* Mejora visual para los campos de entrada dentro de modales */
+.modal-body-emp input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Transición suave para botones */
+.modal-footer button {
+    transition: all 0.2s ease;
+}
+
+.modal-footer button:hover {
+    filter: brightness(0.9);
+    transform: translateY(-1px);
+}
+
+/*PONER CARTEL DE ERROR DE CONTRASENIA POR ENCIMA DE TODO*/
+#modal-alerta {
+    z-index: 9999 !important;
+}
+
+#modal-finalizar-guardia {
+    z-index: 1000 !important;
+}
+/*===*/
+

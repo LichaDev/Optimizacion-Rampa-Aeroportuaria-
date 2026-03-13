@@ -213,20 +213,155 @@
             </div>
         </div>
 
-        <!--Cartel de alerta-->
-        <div id="modal-alerta" class="modal-overlay">
-            <div class="modal-content-modern" style="max-width: 350px;">
-                <div class="modal-header-emp" style="border-bottom: none; padding-bottom: 0;">
-                    <h2 style="color: #e63946;"><i class="fa-solid fa-triangle-exclamation"></i> Error de Asignación</h2>
+        <!--Cartel de alerta limite de asignacion en grupo-->
+<div id="modal-alerta" class="modal-overlay">
+    <div class="modal-content-modern" style="max-width: 350px; width: 90%; margin: 0 auto; padding: 25px; text-align: center;">
+        
+        <div style="color: #e63946; font-size: 3rem; margin-bottom: 15px;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        
+        <div style="border: none; padding: 0;">
+            <h2 id="titulo-alerta" style="color: #1e293b; margin-bottom: 15px;">Aviso</h2>
+        </div>
+        
+        <div style="width: 100%; display: block; text-align: center; padding: 10px 0;">
+            <div id="mensaje-error" style="color: #475569; font-size: 1rem; line-height: 1.5; font-weight: 500;">
+            </div>
+        </div>
+        
+        <div class="modal-footer" style="background: none; border: none; padding: 20px 0 0 0; display: flex !important; justify-content: center !important; width: 100% !important;">
+            <button class="btn-entendido" onclick="cerrarModalAlerta()">Entendido</button>
+        </div>
+        
+    </div>
+</div>
+
+
+        <!--Cartel de empleado creado con exito-->
+        <div id="modal-exito" class="modal-overlay">
+            <div class="modal-content-modern" style="max-width: 350px; text-align: center;">
+                <div class="modal-body-emp" style="padding: 30px;">
+                    <div style="color: #2a9d8f; font-size: 3rem; margin-bottom: 15px;">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <h2 style="margin-bottom: 10px;">¡Operación Exitosa!</h2>
+                    <p id="mensaje-exito" style="color: #475569;"></p>
                 </div>
-                <div class="modal-body-emp">
-                    <p id="mensaje-error" style="color: #475569; font-size: 0.95rem;"></p>
-                </div>
-                <div class="modal-footer" style="background: none; border-top: none; justify-content: center;">
-                    <button class="btn-create" onclick="cerrarModalAlerta()" style="background: #475569;">Entendido</button>
+                <div class="modal-footer" style="justify-content: center; background: none; border: none;">
+                    <button class="btn-create" onclick="cerrarModalExito()" style="background: #2a9d8f; width: 100%;">Excelente</button>
                 </div>
             </div>
         </div>
+
+        <!--Cartel de cerrar sesion-->
+        <div id="modal-logout" class="modal-overlay">
+            <div class="modal-content-modern logout-box">
+                <div class="modal-header-logout">
+                    <div class="icon-wrapper-logout">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </div>
+                </div>
+                <div class="modal-body-logout">
+                    <h2>¿Cerrar Sesión?</h2>
+                    <p>Estás a punto de salir del sistema de gestión de rampa. Deberás volver a ingresar tus credenciales.</p>
+                </div>
+                <div class="modal-footer-logout">
+                    <button class="btn-cancel-logout" onclick="cerrarModalLogout()">Cancelar</button>
+                    <button class="btn-confirm-logout" onclick="confirmarSalida()">Confirmar Salida</button>
+                </div>
+            </div>
+        </div>
+
+        <!---Cartel cerrar guardia--->>
+        <div id="modal-finalizar-guardia" class="modal-overlay">
+            <div class="modal-content-modern logout-box">
+                
+                <div id="confirmacion-guardia">
+                    <div class="modal-header-logout" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                        <div class="icon-wrapper-logout"><i class="fa-solid fa-calendar-xmark"></i></div>
+                    </div>
+                    <div class="modal-body-logout">
+                        <h2>¿Cerrar guardia de 4 días?</h2>
+                        <p>Se eliminarán todos los grupos para el nuevo relevo. Esta acción no se puede deshacer.</p>
+                        
+                        <div style="background: #fff7ed; border: 1px solid #fed7aa; padding: 10px; border-radius: 8px; margin: 15px 0; text-align: center;">
+                            <p id="label-pass-cierre" style="margin: 0; color: #9a3412; font-size: 0.95rem; font-weight: bold;"></p>
+                        </div>
+
+                        <div style="margin-top: 15px; text-align: left;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #475569;">Ingresa la contraseña para confirmar:</label>
+                            <input type="text" id="input-pass-cierre" 
+                                style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 1rem;">
+                        </div>
+                    </div>
+                    <div class="modal-footer-logout">
+                        <button class="btn-cancel-logout" onclick="cerrarModalFinalizar()">Cancelar</button>
+                        <button class="btn-confirm-logout" style="background: #d97706;" onclick="confirmarFinalizarGuardia()">Cerrar Guardia</button>
+                    </div>
+                </div>
+
+                <div id="exito-guardia" style="display: none; text-align: center; padding: 40px 20px;">
+                    <i class="fa-solid fa-circle-check" style="color: #2a9d8f; font-size: 4rem; margin-bottom: 20px;"></i>
+                    <h2 style="color: #1e293b; margin-bottom: 10px;">Guardia cerrada</h2>
+                    <p style="color: #64748b;">¡Buen descanso!</p>
+                </div>
+            </div>
+        </div>
+
+        <!--Cartel error al asignar vuelo a grupo incompleto-->
+        <div id="modal-error-asignacion" class="modal-overlay">
+            <div class="modal-content-modern logout-box"> 
+                <div class="modal-header-logout" style="background: #e76f51;">
+                    <div class="icon-wrapper-logout">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+                <div class="modal-body-logout">
+                    <h2>Grupo Incompleto</h2>
+                    <p id="texto-error-asignacion">El grupo no cumple con la dotación mínima requerida.</p>
+                </div>
+                <div class="modal-footer-logout" style="display: flex; justify-content: center; align-items: center; width: 100%; padding: 15px 0; margin: 0; border-top: 1px solid #eee;">
+                    <button class="btn-confirm-logout" style="display: block; margin: 0 auto; float: none !important; position: static !important;" onclick="cerrarModalErrorAsignacion()">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!--Cartel de confirmacion de eliminacion de empleado desde el staff general-->
+        <div id="modal-eliminar-empleado" class="modal-overlay">
+            <div class="modal-content-modern logout-box">
+                <div class="modal-header-logout" style="background: #e63946;">
+                    <div class="icon-wrapper-logout">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </div>
+                </div>
+                <div class="modal-body-logout">
+                    <h2>¿Eliminar trabajador?</h2>
+                    <p>Se eliminará al empleado del staff general y se revocarán todos sus accesos al sistema. Esta acción <strong>no se puede deshacer</strong>.</p>
+                </div>
+                <div class="modal-footer-logout">
+                    <button class="btn-cancel-logout" onclick="cerrarModalEliminar()">Cancelar</button>
+                    <button class="btn-confirm-logout" style="background: #e63946;" onclick="confirmarEliminarEmpleado()">Eliminar Permanentemente</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!--Cartel de pon un nombre al grupo para crear-->
+        <div id="modal-alerta" class="modal-overlay">
+            <div class="modal-content-modern" style="max-width: 350px;">
+                <div class="modal-body-emp" style="text-align: center; padding: 30px;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size: 3rem; color: #f59e0b; margin-bottom: 15px;"></i>
+                    <p id="mensaje-error" style="font-weight: 500; color: #1e293b;"></p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-create" style="width: 100%;" onclick="cerrarModalAlerta()">Entendido</button>
+                </div>
+            </div>
+        </div>
+
 
     </main>
 

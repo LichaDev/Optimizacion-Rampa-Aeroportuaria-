@@ -1,25 +1,36 @@
 // --- 1. ESTADO DE LA APLICACIÓN (DATOS) ---
+
 let staffGeneral = JSON.parse(localStorage.getItem('staffGeneral')) || [];
 let vuelos = JSON.parse(localStorage.getItem('vuelos')) || [
     { id: 'AR1234', origen: 'EZE', destino: 'MAD', hora: '08:00', estado: 'Pendiente', grupo: null },
     { id: 'IB6842', origen: 'GRU', destino: 'EZE', hora: '09:30', estado: 'Pendiente', grupo: null }
 ];
+
 let grupos = JSON.parse(localStorage.getItem('grupos')) || [];
-let grupoSeleccionadoId = null; 
+let grupoSeleccionadoId = null;
+
+
 
 // --- 2. PERSISTENCIA ---
+
 function guardarCambios() {
     localStorage.setItem('staffGeneral', JSON.stringify(staffGeneral));
     localStorage.setItem('vuelos', JSON.stringify(vuelos));
     localStorage.setItem('grupos', JSON.stringify(grupos));
+
 }
 
+
+
 // --- 3. LÓGICA DE DOCUMENTACIÓN AUTOMÁTICA ---
+
 function generarDocumentos(rol) {
     const hoy = new Date();
     const vence = new Date();
     vence.setFullYear(hoy.getFullYear() + 1);
     const fechaVencimiento = vence.toLocaleDateString('es-AR');
+
+
 
     const docs = {
         CMA: { nombre: "CMA Clase 4", vencimiento: fechaVencimiento, esPermanente: false },
@@ -32,31 +43,47 @@ function generarDocumentos(rol) {
     if (rol === 'CIN' || rol === 'TRA') return [docs.CMA, docs.MANEJO, docs.SENIAL];
     if (rol === 'SUP') return [docs.CMA, docs.MANEJO, docs.SENIAL, docs.SUP];
     return [];
+
 }
 
+
+
 // --- 4. GESTIÓN DE GUARDIA Y GRUPOS ---
+
+
 
 function crearNuevoGrupo() {
     // abrir el modal
     document.getElementById('modal-crear-grupo').classList.add('active');
 }
 
+
+
 function cerrarModalGrupo() {
     document.getElementById('modal-crear-grupo').classList.remove('active');
     document.getElementById('input-nombre-grupo').value = ''; // Limpiar
 }
 
+
+
 function confirmarCreacionGrupo() {
-    const nombre = document.getElementById('input-nombre-grupo').value;
+    const inputNombre = document.getElementById('input-nombre-grupo');
+    const nombre = inputNombre.value;
     
+    // Validamos el nombre
     if (!nombre || nombre.trim() === "") {
-        alert("Por favor, ingresa un nombre válido.");
+        // En lugar del alert, usamos tu modal de alerta estilizado
+        mostrarAlerta("⚠️ Debes ingresar un nombre para identificar al grupo.");
+        
+        // Opcional: le damos un feedback visual al input
+        inputNombre.style.borderColor = "#ef4444";
+        setTimeout(() => { inputNombre.style.borderColor = "#e2e8f0"; }, 2000);
         return;
     }
 
     const nuevoGrupo = {
         id: Date.now(),
-        nombre: nombre,
+        nombre: nombre.trim(),
         estado: 'Disponible',
         descanso: 0,
         integrantes: []
@@ -65,21 +92,74 @@ function confirmarCreacionGrupo() {
     grupos.push(nuevoGrupo);
     guardarCambios();
     actualizarInterfaz();
-    cerrarModalGrupo(); // Cerrar el modal tras guardar
+    cerrarModalGrupo(); 
 }
 
+// Variable maestra: cambia esto y se actualiza todo el sistema
+const CONTRASEÑA_CIERRE = "CCR123";
+
+// Esta función abre el modal
 function finalizarGuardia() {
-    const confirmacion = confirm("¿Cerrar guardia de 4 días? Se eliminarán todos los grupos para el nuevo relevo. El Staff General permanecerá intacto.");
-    if (confirmacion) {
-        grupos = []; 
-        vuelos.forEach(v => {
-            v.estado = 'Pendiente';
-            v.grupo = null;
-        });
-        guardarCambios();
-        actualizarInterfaz();
-        alert("Guardia finalizada. Sistema listo para la nueva configuración.");
+    // 1. Inyectar la contraseña automáticamente al abrir
+    document.getElementById('label-pass-cierre').innerText = "Contraseña requerida: " + CONTRASEÑA_CIERRE;
+    document.getElementById('input-pass-cierre').placeholder = "Escribe " + CONTRASEÑA_CIERRE;
+    
+    // 2. Mostrar el modal
+    document.getElementById('modal-finalizar-guardia').classList.add('active');
+}
+
+
+function cerrarModalFinalizar() {
+    const modal = document.getElementById('modal-finalizar-guardia');
+    if (modal) {
+        modal.classList.remove('active');
+        console.log("Modal removido correctamente");
+    } else {
+        console.error("No se encontró el elemento con id 'modal-finalizar-guardia'");
     }
+}
+
+
+
+// Esta función ejecuta la lógica real cuando el usuario confirma
+function confirmarFinalizarGuardia() {
+    const inputPass = document.getElementById('input-pass-cierre');
+    const passIngresada = inputPass.value;
+
+    // 1. Validación usando la constante maestra (ignorando mayúsculas/minúsculas)
+    if (passIngresada.toUpperCase() !== CONTRASEÑA_CIERRE) {
+        mostrarAlerta("Denegado", "La contraseña es incorrecta. La guardia no ha sido cerrada.");
+        inputPass.style.borderColor = "#e63946"; // Feedback visual de error
+        return;
+    }
+
+    // 2. Si es correcta, resetear estilo y limpiar campo
+    inputPass.style.borderColor = "#e2e8f0";
+    inputPass.value = "";
+
+    // 3. Lógica de limpieza de datos
+    grupos = []; 
+    vuelos.forEach(v => {
+        v.estado = 'Pendiente';
+        v.grupo = null;
+    });
+    guardarCambios();
+    actualizarInterfaz();
+
+    // 4. Transición visual al mensaje de éxito
+    document.getElementById('confirmacion-guardia').style.display = 'none';
+    document.getElementById('exito-guardia').style.display = 'block';
+
+    // 5. Cierre automático y reseteo de la UI para la próxima vez
+    setTimeout(() => {
+        cerrarModalFinalizar();
+        
+        // Esperamos a que el modal termine de cerrar visualmente para resetearlo
+        setTimeout(() => {
+            document.getElementById('confirmacion-guardia').style.display = 'block';
+            document.getElementById('exito-guardia').style.display = 'none';
+        }, 500);
+    }, 2000);
 }
 
 function eliminarGrupoCompleto(id) {
@@ -90,34 +170,69 @@ function eliminarGrupoCompleto(id) {
     }
 }
 
-// --- 5. RENDERIZADO DE INTERFAZ OPERATIVA ---
 
+// --- 5. RENDERIZADO DE INTERFAZ OPERATIVA ---
 function renderizarVuelos() {
     const contenedor = document.getElementById('contenedor-vuelos');
+
     if (!contenedor) return;
+    if (vuelos.length === 0) {
+        contenedor.innerHTML = '<p class="empty-msg">No hay vuelos programados.</p>';
+        return;
+    }
+
     contenedor.innerHTML = vuelos.map(v => `
-        <article class="card flight-card ${v.estado === 'Asignado' ? 'assigned' : ''}">
-            <div class="flight-info">
-                <div class="flight-header">
-                    <span class="flight-id">${v.id}</span>
-                    <span class="badge ${v.estado === 'Asignado' ? 'badge-assigned' : 'badge-pending'}">${v.estado}</span>
-                </div>
-                <div class="flight-details">
-                    <p><strong>${v.origen}</strong> <i class="fa-solid fa-arrow-right"></i> <strong>${v.destino}</strong></p>
-                    <p class="time"><i class="fa-regular fa-clock"></i> ${v.hora}</p>
-                </div>
-                ${v.grupo ? `<div class="assigned-group-info"><span class="badge badge-assigned">${v.grupo} trabajando</span></div>` : ''}
+        <article class="flight-card ${v.estado.toLowerCase()}">
+
+            <div class="flight-time-box">
+
+                <span class="time">${v.hora}</span>
+
+                <span class="label">Arribo</span>
+
             </div>
+
+
+
+            <div class="flight-info-main">
+
+                <span class="flight-id">${v.id}</span>
+
+                <span class="flight-route">${v.origen} → ${v.destino}</span>
+
+                ${v.grupo ? `<span class="assigned-tag"><i class="fa-solid fa-users"></i> ${v.grupo}</span>` : ''}
+
+            </div>
+
+
+
             <div class="flight-actions">
-                ${v.estado === 'Pendiente' ? `<button class="btn-assign" onclick="asignarGrupo('${v.id}')">Asignar</button>` : ''}
+
+                ${v.estado === 'Pendiente' ?
+
+                    `<button class="btn-assign" onclick="asignarGrupo('${v.id}')">Asignar</button>` :
+
+                    `<span class="status-done">Asignado</span>`}
+
             </div>
+
         </article>
+
     `).join('');
+
 }
+
+
 
 function renderizarGrupos() {
     const contenedor = document.getElementById('contenedor-grupos');
+
     if (!contenedor) return;
+
+    // 1. Capturar IDs de grupos que están abiertos actualmente
+    const gruposAbiertos = Array.from(contenedor.querySelectorAll('details[open]'))
+
+    .map(d => d.getAttribute('data-id'));
 
     if (grupos.length === 0) {
         contenedor.innerHTML = '<div class="empty-msg"><p>No hay grupos creados para esta guardia.</p></div>';
@@ -128,53 +243,65 @@ function renderizarGrupos() {
         const counts = {
             SUP: g.integrantes.filter(i => i.rol === 'SUP').length,
             CIN: g.integrantes.filter(i => i.rol === 'CIN').length,
-            MAL: g.integrantes.filter(i => i.rol === 'MAL').length
+            MAL: g.integrantes.filter(i => i.rol === 'MAL').length,
+            TRA: g.integrantes.filter(i => i.rol === 'TRA').length
         };
-        const estaCompleto = counts.SUP >= 1 && counts.CIN >= 1 && counts.MAL >= 2;
 
+        const estaCompleto = counts.SUP >= 1 && counts.CIN >= 1 && counts.MAL >= 2 && counts.TRA >= 1;
+
+        // 2. Agregamos el atributo 'open' si el ID estaba en nuestra lista
+        const isOpen = gruposAbiertos.includes(String(g.id));
         return `
-        <details class="card group-card ${g.estado === 'Ocupado' ? 'busy' : ''}">
-            <summary>
-                <div class="group-summary-content">
-                    <div>
-                        <strong>${g.nombre}</strong>
-                        ${estaCompleto ? '<i class="fa-solid fa-circle-check" style="color:#2a9d8f; margin-left:5px;" title="Equipo Mínimo OK"></i>' : ''}
+            <details class="card group-card ${g.estado === 'Ocupado' ? 'busy' : ''}"
+                     data-id="${g.id}" ${isOpen ? 'open' : ''}>
+                <summary class="group-summary-content">
+                    <div class="group-title-wrapper">
+                        <i class="fa-solid fa-chevron-down group-arrow"></i>
+                        <div>
+                            <strong>${g.nombre}</strong>
+                            ${estaCompleto ? '<i class="fa-solid fa-circle-check" style="color:#2a9d8f; margin-left:5px;" title="Equipo Mínimo OK"></i>' : ''}
+                        </div>
                     </div>
                     <div class="group-actions-header">
                         <span class="badge ${g.estado === 'Disponible' ? 'badge-available' : 'badge-busy'}">${g.estado}</span>
                         <button class="btn-add-mini" onclick="abrirModalAsignar(${g.id}, event)">
                             <i class="fa-solid fa-user-plus"></i>
                         </button>
-                        <button class="btn-delete-mini" onclick="eliminarGrupoCompleto(${g.id})">
+                        <button class="btn-delete-mini" onclick="eliminarGrupoCompleto(${g.id}, event)">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
+                </summary>
+                <div class="group-expanded-detail">
+                    <table class="staff-table-mini">
+                        ${g.integrantes.length > 0 ?
+                            g.integrantes.map((i, index) => `
+                                <tr>
+                                    <td><strong>${i.rol}</strong></td>
+                                    <td>${i.nombre}</td>
+                                    <td>
+                                        <button class="btn-remove" onclick="quitarDelGrupo(${g.id}, ${index}, event)">
+                                            &times;
+                                        </button>
+                                    </td>
+                                </tr>`).join('')
+                            : '<tr><td colspan="3" style="text-align:center; color:gray; padding:10px;">Sin personal asignado.</td></tr>'}
+                    </table>
                 </div>
-            </summary>
-            <div class="group-expanded-detail">
-                <table class="staff-table-mini">
-                    ${g.integrantes.length > 0 ? 
-                        g.integrantes.map((i, index) => `
-                        <tr>
-                            <td><strong>${i.rol}</strong></td>
-                            <td>${i.nombre}</td>
-                            <td><button class="btn-remove" onclick="quitarDelGrupo(${g.id}, ${index})">&times;</button></td>
-                        </tr>`).join('') : 
-                        '<tr><td colspan="3" style="color:gray; font-size:0.8rem; padding:10px;">Sin personal asignado.</td></tr>'}
-                </table>
-            </div>
-        </details>
-    `}).join('');
+            </details>
+        `;
+    }).join('');
 }
 
-// --- 6. GESTIÓN DE PERSONAL POR ROL (NUEVA VISTA) ---
 
+// --- 6. GESTIÓN DE PERSONAL POR ROL (NUEVA VISTA) ---
 function renderizarVistaPersonal() {
     const contenedor = document.getElementById('contenedor-roles');
+
     if (!contenedor) return;
 
     const busqueda = document.getElementById('busqueda-personal-rol').value.toLowerCase();
-    
+
     const rolesConfig = [
         { id: 'SUP', titulo: 'Supervisores', icono: 'fa-user-tie' },
         { id: 'TRA', titulo: 'Tractoristas', icono: 'fa-truck-ramp-box' },
@@ -183,8 +310,8 @@ function renderizarVistaPersonal() {
     ];
 
     contenedor.innerHTML = rolesConfig.map(rol => {
-        const personalFiltrado = staffGeneral.filter(p => 
-            p.rol === rol.id && 
+        const personalFiltrado = staffGeneral.filter(p =>
+            p.rol === rol.id &&
             (p.nombre.toLowerCase().includes(busqueda) || p.legajo.includes(busqueda))
         );
 
@@ -209,7 +336,6 @@ function renderizarVistaPersonal() {
                                     </div>
                                 `).join('')}
                             </div>
-                            
                             <div class="person-creds-toggle" onclick="toggleCredenciales('${p.legajo}')">
                                 <i class="fa-solid fa-key"></i> Ver acceso <i id="icon-creds-${p.legajo}" class="fa-solid fa-chevron-down"></i>
                             </div>
@@ -226,12 +352,15 @@ function renderizarVistaPersonal() {
     }).join('');
 }
 
+
 // FUNCIÓN AL FINAL PARA QUE EL TOGGLE FUNCIONE:
 function toggleCredenciales(legajo) {
     const caja = document.getElementById(`creds-${legajo}`);
     const icono = document.getElementById(`icon-creds-${legajo}`);
+
     if (caja.style.display === 'none') {
         caja.style.display = 'block';
+
         if(icono) icono.classList.replace('fa-chevron-down', 'fa-chevron-up');
     } else {
         caja.style.display = 'none';
@@ -239,10 +368,11 @@ function toggleCredenciales(legajo) {
     }
 }
 
+
 function editarDocumento(legajo, docIndex) {
     const empleado = staffGeneral.find(p => p.legajo === legajo);
-    if (!empleado) return;
 
+    if (!empleado) return;
     const doc = empleado.documentos[docIndex];
     const nuevoVencimiento = prompt(`Editar vencimiento para ${doc.nombre} (${empleado.nombre}):`, doc.vencimiento);
 
@@ -253,14 +383,15 @@ function editarDocumento(legajo, docIndex) {
     }
 }
 
-// --- 7. REGISTRO STAFF GENERAL ---
 
+// --- 7. REGISTRO STAFF GENERAL ---
 function renderizarTablaPersonal() {
     const tbody = document.getElementById('tabla-personal-body');
+
     if (!tbody) return;
-    
+
     const busqueda = document.getElementById('buscar-personal').value.toLowerCase();
-    const staffFiltrado = staffGeneral.filter(p => 
+    const staffFiltrado = staffGeneral.filter(p =>
         p.nombre.toLowerCase().includes(busqueda) || p.legajo.includes(busqueda)
     );
 
@@ -293,39 +424,42 @@ function renderizarTablaPersonal() {
     `).join('');
 }
 
-// --- 8. LÓGICA DE ASIGNACIÓN (MODAL) ---
 
+// --- 8. LÓGICA DE ASIGNACIÓN (MODAL) ---
 function abrirModalAsignar(id, event) {
-    if(event) event.stopPropagation(); 
+
+    if(event) event.stopPropagation();
     grupoSeleccionadoId = id;
     const modal = document.getElementById('modal-asignar');
     modal.style.display = 'flex';
     renderizarListaPersonalSeleccionable();
 }
 
+
 function cerrarModal() {
     document.getElementById('modal-asignar').style.display = 'none';
 }
 
+
 function renderizarListaPersonalSeleccionable() {
     const contenedor = document.getElementById('lista-personal-disponible');
-    if (!contenedor) return;
 
+    if (!contenedor) return;
     const busqueda = document.getElementById('busqueda-asignar').value.toLowerCase();
     const nombresRoles = { 'SUP': 'Supervisores', 'TRA': 'Tractoristas', 'MAL': 'Maleteros', 'CIN': 'Cinteros' };
 
     let htmlFinal = '';
     Object.keys(nombresRoles).forEach(rolKey => {
-        const personalDeEsteRol = staffGeneral.filter(p => 
+        const personalDeEsteRol = staffGeneral.filter(p =>
             p.rol === rolKey && (p.nombre.toLowerCase().includes(busqueda) || p.legajo.includes(busqueda))
         );
-        
+
         if (personalDeEsteRol.length > 0) {
             htmlFinal += `<h3 class="role-divider">${nombresRoles[rolKey]}</h3>`;
             personalDeEsteRol.forEach(p => {
                 const yaAsignado = grupos.some(g => g.integrantes.some(i => i.legajo === p.legajo));
                 htmlFinal += `
-                    <div class="item-seleccionable ${yaAsignado ? 'disabled' : ''}" 
+                    <div class="item-seleccionable ${yaAsignado ? 'disabled' : ''}"
                          onclick="${yaAsignado ? '' : `confirmarAsignacionALista('${p.legajo}')`}">
                         <div>
                             <strong>${p.nombre}</strong><br>
@@ -337,24 +471,24 @@ function renderizarListaPersonalSeleccionable() {
             });
         }
     });
+
     contenedor.innerHTML = htmlFinal || '<p style="padding:20px; text-align:center;">No hay personal disponible.</p>';
 }
+
 
 function confirmarAsignacionALista(legajo) {
     const empleado = staffGeneral.find(p => p.legajo === legajo);
     const grupo = grupos.find(g => g.id === grupoSeleccionadoId);
-    
     if (!empleado || !grupo) return;
 
     // 1. Definimos los cupos máximos permitidos
-    const cuposMaximos = { 'SUP': 1, 'CIN': 1, 'MAL': 2 };
+    const cuposMaximos = { 'SUP': 1, 'CIN': 1, 'MAL': 2 , 'TRA': 1 };
 
     // 2. Contamos cuántos hay actualmente de ese rol en el grupo
     const conteoActual = grupo.integrantes.filter(i => i.rol === empleado.rol).length;
 
-    // 3. Validación: Si ya alcanzó el límite, mostramos TU MODAL ESTILIZADO
+    // 3. Validación: Si ya alcanzó el límite
     if (conteoActual >= cuposMaximos[empleado.rol]) {
-        // AQUÍ ESTÁ EL CAMBIO: Usamos tu función en lugar de alert()
         mostrarAlerta(`⚠️ No se puede agregar: El rol ${empleado.rol} ya alcanzó el cupo máximo permitido para este grupo.`);
         return;
     }
@@ -363,9 +497,16 @@ function confirmarAsignacionALista(legajo) {
     grupo.integrantes.push({...empleado});
     guardarCambios();
     renderizarGrupos();
-    renderizarListaPersonalSeleccionable(); 
+    renderizarListaPersonalSeleccionable();
 }
-function quitarDelGrupo(grupoId, indexIntegrante) {
+
+function quitarDelGrupo(grupoId, indexIntegrante, event) {
+
+    // 1. Evitamos que el clic en el botón active el toggle del <details>
+    if (event) {
+        event.stopPropagation();
+    }
+
     const grupo = grupos.find(g => g.id === grupoId);
     if (grupo) {
         grupo.integrantes.splice(indexIntegrante, 1);
@@ -374,24 +515,31 @@ function quitarDelGrupo(grupoId, indexIntegrante) {
     }
 }
 
+
 function asignarGrupo(vueloId) {
     const gruposAptos = grupos.filter(g => {
         if (g.estado !== 'Disponible') return false;
         const c = {
             SUP: g.integrantes.filter(i => i.rol === 'SUP').length,
             CIN: g.integrantes.filter(i => i.rol === 'CIN').length,
-            MAL: g.integrantes.filter(i => i.rol === 'MAL').length
+            MAL: g.integrantes.filter(i => i.rol === 'MAL').length,
+            TRA: g.integrantes.filter(i => i.rol === 'TRA').length
         };
-        return c.SUP >= 1 && c.CIN >= 1 && c.MAL >= 2;
+        return c.SUP >= 1 && c.CIN >= 1 && c.MAL >= 2 && c.TRA >= 1;
     });
 
     const grupoElegido = gruposAptos.sort((a,b) => b.descanso - a.descanso)[0];
 
     if (!grupoElegido) {
-        alert("⚠️ No se puede asignar el vuelo. Equipo mínimo requerido: 1 SUP, 1 CIN, 2 MAL.");
+        // ica para mostrar el modal
+        const modal = document.getElementById('modal-error-asignacion');
+        const texto = document.getElementById('texto-error-asignacion');
+        texto.innerText = "Para asignar un vuelo, el grupo debe contar con: 1 SUP, 1 CIN, 2 MAL y 1 TRA. Verifique la dotación actual.";
+        modal.classList.add('active');
         return;
     }
 
+    // ... resto de lógica de asignación exitosa ...
     const vuelo = vuelos.find(v => v.id === vueloId);
     vuelo.estado = 'Asignado';
     vuelo.grupo = grupoElegido.nombre;
@@ -400,8 +548,12 @@ function asignarGrupo(vueloId) {
     actualizarInterfaz();
 }
 
-// --- 9. NAVEGACIÓN Y EVENTOS ---
+// Función para cerrar el nuevo modal
+function cerrarModalErrorAsignacion() {
+    document.getElementById('modal-error-asignacion').classList.remove('active');
+}
 
+// --- 9. NAVEGACIÓN Y EVENTOS ---
 function ocultarTodasLasVistas() {
     document.querySelectorAll('.tab-view').forEach(v => v.style.display = 'none');
     document.querySelectorAll('.main-nav li').forEach(li => li.classList.remove('active'));
@@ -428,51 +580,62 @@ document.getElementById('nav-staff-registro').addEventListener('click', () => {
     renderizarTablaPersonal();
 });
 
-// Manejador del formulario del MODAL (reemplaza al anterior)
+
+// Manejador del formulario del MODAL
+// --- 9. NAVEGACIÓN Y EVENTOS ---
 document.getElementById('form-nuevo-empleado').addEventListener('submit', (e) => {
     e.preventDefault();
-    
-    const legajo = document.getElementById('emp-legajo').value;
-    const usuario = document.getElementById('emp-usuario').value;
 
-    // Validación de duplicados
+    // Usamos .trim() para evitar espacios accidentales que rompan el login
+    const legajo = document.getElementById('emp-legajo').value.trim();
+    const usuario = document.getElementById('emp-usuario').value.trim();
+    const nombre = document.getElementById('emp-nombre').value.trim();
+    const password = document.getElementById('emp-password').value.trim();
+    const rol = document.getElementById('emp-rol').value;
+
+    // Validación de duplicados con  nuevo modal de alerta
     if(staffGeneral.some(p => p.legajo === legajo)) {
-        return alert("Error: El legajo ya existe.");
+        mostrarAlerta("Error: El número de legajo ya se encuentra registrado.");
+        return;
     }
-    
-    // Crear el objeto con los nuevos campos de acceso
+
+
     const nuevoTrabajador = {
         legajo: legajo,
-        nombre: document.getElementById('emp-nombre').value,
-        rol: document.getElementById('emp-rol').value,
+        nombre: nombre,
+        rol: rol,
         usuario: usuario,
-        pass: document.getElementById('emp-password').value,
-        documentos: generarDocumentos(document.getElementById('emp-rol').value) 
+        pass: password,
+        documentos: generarDocumentos(rol)
     };
 
     // Guardar en el staff operativo
     staffGeneral.push(nuevoTrabajador);
-    
-    // IMPORTANTE: Guardar credenciales para que auth.js las reconozca
+
+    // Sincronización con el sistema de autenticación
     let usuariosAuth = JSON.parse(localStorage.getItem('usuarios_sistema')) || [];
     usuariosAuth.push({
+
         username: nuevoTrabajador.usuario,
         password: nuevoTrabajador.pass,
         role: nuevoTrabajador.rol
     });
     localStorage.setItem('usuarios_sistema', JSON.stringify(usuariosAuth));
-
     guardarCambios();
-    renderizarTablaPersonal(); // Refresca la tabla de staff
-    cerrarModalEmpleado();     // Cierra y limpia el modal
-    alert(`Empleado ${nuevoTrabajador.nombre} registrado correctamente.`);
+    renderizarTablaPersonal();
+    cerrarModalEmpleado();
+
+    // --- AHORA LLAMA AL MODAL DE ÉXITO ---
+    mostrarExito(`¡Excelente! El empleado ${nuevoTrabajador.nombre} ha sido creado y ya puede acceder al sistema.`);
 });
+
 
 // Controladores de visibilidad del modal
 function abrirModalEmpleado() {
     document.getElementById('modal-nuevo-empleado').style.display = 'flex';
     actualizarListaDocsPreview(); // Para que muestre los docs según el rol inicial
 }
+
 
 function cerrarModalEmpleado() {
     document.getElementById('modal-nuevo-empleado').style.display = 'none';
@@ -483,7 +646,7 @@ function cerrarModalEmpleado() {
 function actualizarListaDocsPreview() {
     const rol = document.getElementById('emp-rol').value;
     const lista = document.getElementById('lista-docs-preview');
-    
+
     // Llamamos a lógica de la Sección 3
     const docsPrevia = generarDocumentos(rol);
     lista.innerHTML = docsPrevia.map(d => `
@@ -491,48 +654,88 @@ function actualizarListaDocsPreview() {
     `).join('');
 }
 
-function eliminarPersonal(legajo) {
-    if(confirm("¿Eliminar este trabajador del staff general y revocar su acceso?")) {
-        // Buscar el usuario antes de filtrar para borrar su credencial
-        const empleado = staffGeneral.find(p => p.legajo === legajo);
-        
-        if (empleado) {
-            // 1. Borrar de usuarios_sistema
-            let usuariosAuth = JSON.parse(localStorage.getItem('usuarios_sistema')) || [];
-            usuariosAuth = usuariosAuth.filter(u => u.username !== empleado.usuario);
-            localStorage.setItem('usuarios_sistema', JSON.stringify(usuariosAuth));
-        }
+// Variable global para capturar qué legajo queremos borrar
+let legajoAEliminar = null;
 
-        // 2. Borrar del staff general
-        staffGeneral = staffGeneral.filter(p => p.legajo !== legajo);
-        
-        guardarCambios();
-        renderizarTablaPersonal();
+
+function eliminarPersonal(legajo) {
+
+    // En lugar del confirm() nativo, guardamos el legajo y abrimos el modal
+    legajoAEliminar = legajo;
+    const modal = document.getElementById('modal-eliminar-empleado');
+
+    if (modal) {
+        modal.classList.add('active');
     }
+}
+
+
+function cerrarModalEliminar() {
+    legajoAEliminar = null; // Limpiamos la variable al cerrar
+    document.getElementById('modal-eliminar-empleado').classList.remove('active');
+}
+
+
+function confirmarEliminarEmpleado() {
+    if (!legajoAEliminar) return;
+
+    // 1. Lógica de borrado
+    const empleado = staffGeneral.find(p => p.legajo === legajoAEliminar);
+    if (empleado) {
+        let usuariosAuth = JSON.parse(localStorage.getItem('usuarios_sistema')) || [];
+        usuariosAuth = usuariosAuth.filter(u => u.username !== empleado.usuario);
+        localStorage.setItem('usuarios_sistema', JSON.stringify(usuariosAuth));
+    }
+    staffGeneral = staffGeneral.filter(p => p.legajo !== legajoAEliminar);
+    
+    guardarCambios();
+    renderizarTablaPersonal();
+
+    // 2. Feedback visual SIN destruir el HTML
+    const modalContent = document.querySelector('#modal-eliminar-empleado .modal-content-modern');
+    
+    // Guardamos el contenido original para restaurarlo después
+    const contenidoOriginal = modalContent.innerHTML;
+    
+    modalContent.innerHTML = `
+        <div style="text-align:center; padding: 40px;">
+            <i class="fa-solid fa-circle-check" style="color: #2a9d8f; font-size: 4rem;"></i>
+            <h2 style="margin-top: 20px;">¡Eliminado!</h2>
+        </div>
+    `;
+
+    // 3. Restaurar después de 1.5s
+    setTimeout(() => {
+        modalContent.innerHTML = contenidoOriginal; // Restauramos el original
+        cerrarModalEliminar();
+    }, 1500);
 }
 
 function actualizarInterfaz() {
     renderizarVuelos();
     renderizarGrupos();
-    if(document.getElementById('count-vuelos')) 
+    if(document.getElementById('count-vuelos'))
         document.getElementById('count-vuelos').innerText = vuelos.filter(v => v.estado === 'Pendiente').length;
     if(document.getElementById('count-grupos'))
         document.getElementById('count-grupos').innerText = grupos.filter(g => g.estado === 'Disponible').length;
 }
 
+
 document.addEventListener('DOMContentLoaded', actualizarInterfaz);
 
 // --- 10. CIERRE DE SESIÓN ---
 function logout() {
+
     // 1. Opcional: Confirmar antes de salir para evitar clics accidentales
     if (confirm("¿Estás seguro de que deseas cerrar sesión?")) {
-        
+
         // 2. Limpiar el rol del localStorage para que nadie entre sin loguearse
         localStorage.removeItem("role");
-        
+
         // 3. Redirigir al index (o login.html, como se llame tu archivo principal)
         // Si login está en la raíz y se llama index.html:
-        window.location.href = "index.html"; 
+
+        window.location.href = "index.html";
     }
 }
 
@@ -540,6 +743,7 @@ function logout() {
 const modal = document.querySelector('.modal-overlay');
 const btnAbrir = document.querySelector('.btn-add-personal');
 const btnCerrar = document.querySelector('.btn-close-x'); // O el botón que tengas
+
 
 // 2. Función para abrir
 btnAbrir.addEventListener('click', () => {
@@ -551,6 +755,7 @@ btnCerrar.addEventListener('click', () => {
     modal.classList.remove('active');
 });
 
+
 // 4. Opcional: Cerrar si hacen clic fuera del recuadro blanco
 modal.addEventListener('click', (e) => {
     if (e.target === modal) {
@@ -558,13 +763,58 @@ modal.addEventListener('click', (e) => {
     }
 });
 
-function mostrarAlerta(mensaje) {
+// --- 10. MODALES DE CONTROL (ACTUALIZADOS) ---
+
+function mostrarAlerta(titulo, mensaje) {
     const modal = document.getElementById('modal-alerta');
+    const tituloModal = document.getElementById('titulo-alerta');
     const texto = document.getElementById('mensaje-error');
+
+    // Si no se envía mensaje pero sí título, intercambiamos o manejamos el error
+    // Pero lo más fácil es: si solo envías 1 argumento, ese es el mensaje
+    if (mensaje === undefined) {
+        mensaje = titulo;
+        titulo = "Aviso"; // Título por defecto
+    }
     
-    texto.innerText = mensaje; // Ponemos el mensaje personalizado
-    modal.classList.add('active'); // Mostramos el modal
+    tituloModal.innerText = titulo;
+    texto.innerText = mensaje;
+    
+    modal.classList.add('active');
 }
+
+// --- MODAL DE EMPLEADO CREADO CON EXITO ---
+function cerrarModalAlerta() {
+    document.getElementById('modal-alerta').classList.remove('active');
+}
+
+function mostrarExito(mensaje) {
+    const modal = document.getElementById('modal-exito');
+    document.getElementById('mensaje-exito').innerText = mensaje;
+    modal.classList.add('active');
+}
+
+function cerrarModalExito() {
+    document.getElementById('modal-exito').classList.remove('active');
+}
+
+
+function logout() {
+    // Abre tu modal estilizado
+    document.getElementById('modal-logout').classList.add('active');
+}
+
+
+function cerrarModalLogout() {
+    document.getElementById('modal-logout').classList.remove('active');
+}
+
+
+function confirmarSalida() {
+    localStorage.removeItem("role");
+    window.location.href = "index.html";
+}
+
 
 function cerrarModalAlerta() {
     document.getElementById('modal-alerta').classList.remove('active');
